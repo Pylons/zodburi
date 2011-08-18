@@ -265,7 +265,7 @@ class TestZConfigURIResolver(unittest.TestCase):
     def tearDown(self):
         self.tmp.close()
 
-    def test_named_database(self):
+    def test_named_storage(self):
         self.tmp.write("""
         <demostorage foo>
         </demostorage>
@@ -280,7 +280,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage), storage)
 
-    def test_anonymous_database(self):
+    def test_anonymous_storage(self):
         self.tmp.write("""
         <mappingstorage>
         </mappingstorage>
@@ -294,6 +294,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         storage = factory()
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
+        self.assertEqual(dbkw, {})
 
     def test_query_string_args(self):
         self.tmp.write("""
@@ -308,7 +309,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         factory, dbkw = resolver('zconfig://%s?foo=bar' % self.tmp.name)
         self.assertEqual(dbkw, {'foo': 'bar'})
 
-    def test_database_not_found(self):
+    def test_storage_not_found(self):
         self.tmp.write("""
         <mappingstorage x>
         </mappingstorage>
@@ -316,6 +317,44 @@ class TestZConfigURIResolver(unittest.TestCase):
         self.tmp.flush()
         resolver = self._makeOne()
         self.assertRaises(KeyError, resolver, 'zconfig://%s#y' % self.tmp.name)
+
+    def test_anonymous_database(self):
+        self.tmp.write("""
+        <zodb>
+          <mappingstorage>
+          </mappingstorage>
+        </zodb>
+        """)
+        self.tmp.flush()
+        resolver = self._makeOne()
+        factory, dbkw = resolver('zconfig://%s' % self.tmp.name)
+        storage = factory()
+        from ZODB.MappingStorage import MappingStorage
+        self.assertTrue(isinstance(storage, MappingStorage))
+        self.assertEqual(dbkw, {
+            'connection_cache_size': 5000,
+            'connection_pool_size': 7})
+
+    def test_named_database(self):
+        self.tmp.write("""
+        <zodb x>
+          <mappingstorage>
+          </mappingstorage>
+          database-name foo
+          cache-size 20000
+          pool-size 5
+        </zodb>
+        """)
+        self.tmp.flush()
+        resolver = self._makeOne()
+        factory, dbkw = resolver('zconfig://%s#x' % self.tmp.name)
+        storage = factory()
+        from ZODB.MappingStorage import MappingStorage
+        self.assertTrue(isinstance(storage, MappingStorage))
+        self.assertEqual(dbkw, {
+            'connection_cache_size': 20000,
+            'connection_pool_size': 5,
+            'database_name': 'foo'})
 
 class TestMappingStorageURIResolver(Base, unittest.TestCase):
 

@@ -3,6 +3,7 @@ import cgi
 from cStringIO import StringIO
 import urlparse
 
+from ZODB.config import ZODBDatabase
 from ZEO.ClientStorage import ClientStorage
 from ZODB.FileStorage.FileStorage import FileStorage
 from ZODB.DemoStorage import DemoStorage
@@ -158,6 +159,7 @@ class ZConfigURIResolver(object):
     <schema>
         <import package="ZODB"/>
         <multisection type="ZODB.storage" attribute="storages" />
+        <multisection type="ZODB.database" attribute="databases" />
     </schema>
     """
 
@@ -169,16 +171,30 @@ class ZConfigURIResolver(object):
         schema_xml = self.schema_xml_template
         schema = ZConfig.loadSchemaFile(StringIO(schema_xml))
         config, handler = ZConfig.loadConfig(schema, path)
-        for factory in config.storages:
+        for config_item in config.databases + config.storages:
             if not frag:
                 # use the first defined in the file
                 break
-            elif frag == factory.name:
+            elif frag == config_item.name:
                 # match found
                 break
         else:
-            raise KeyError("No storage named %s found" % frag)
-        return factory.open, dict(cgi.parse_qsl(query))
+            raise KeyError("No storage or database named %s found" % frag)
+
+        if isinstance(config_item, ZODBDatabase):
+            config = config_item.config
+            factory = config.storage
+            dbkw = {
+                'connection_cache_size': config.cache_size,
+                'connection_pool_size': config.pool_size,
+            }
+            if config.database_name:
+                dbkw['database_name'] = config.database_name
+        else:
+            factory = config_item
+            dbkw = dict(cgi.parse_qsl(query))
+
+        return factory.open, dbkw
 
 
 client_storage_resolver = ClientStorageURIResolver()
