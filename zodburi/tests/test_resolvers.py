@@ -1,3 +1,4 @@
+import mock
 import unittest
 
 class Base:
@@ -5,7 +6,7 @@ class Base:
     def test_interpret_kwargs_noargs(self):
         resolver = self._makeOne()
         kwargs = resolver.interpret_kwargs({})
-        self.assertEqual(kwargs, {})
+        self.assertEqual(kwargs, ({}, {}))
 
     def test_bytesize_args(self):
         resolver = self._makeOne()
@@ -13,7 +14,7 @@ class Base:
         kwargs = {}
         for name in names:
             kwargs[name] = '10MB'
-        args = resolver.interpret_kwargs(kwargs)
+        args = resolver.interpret_kwargs(kwargs)[0]
         keys = args.keys()
         keys.sort()
         self.assertEqual(keys, names)
@@ -26,7 +27,7 @@ class Base:
         kwargs = {}
         for name in names:
             kwargs[name] = '10'
-        args = resolver.interpret_kwargs(kwargs)
+        args = resolver.interpret_kwargs(kwargs)[0]
         keys = args.keys()
         keys.sort()
         self.assertEqual(sorted(keys), sorted(names))
@@ -39,7 +40,7 @@ class Base:
         kwargs = {}
         for name in names:
             kwargs[name] = 'string'
-        args = resolver.interpret_kwargs(kwargs)
+        args = resolver.interpret_kwargs(kwargs)[0]
         keys = args.keys()
         keys.sort()
         self.assertEqual(keys, names)
@@ -68,96 +69,70 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
         resolver = self._makeOne()
         f = resolver.interpret_kwargs
         kwargs = f({'read_only':'1'})
-        self.assertEqual(kwargs, {'read_only':1})
+        self.assertEqual(kwargs[0], {'read_only':1})
         kwargs = f({'read_only':'true'})
-        self.assertEqual(kwargs, {'read_only':1})
+        self.assertEqual(kwargs[0], {'read_only':1})
         kwargs = f({'read_only':'on'})
-        self.assertEqual(kwargs, {'read_only':1})
+        self.assertEqual(kwargs[0], {'read_only':1})
         kwargs = f({'read_only':'off'})
-        self.assertEqual(kwargs, {'read_only':0})
+        self.assertEqual(kwargs[0], {'read_only':0})
         kwargs = f({'read_only':'no'})
-        self.assertEqual(kwargs, {'read_only':0})
+        self.assertEqual(kwargs[0], {'read_only':0})
         kwargs = f({'read_only':'false'})
-        self.assertEqual(kwargs, {'read_only':0})
+        self.assertEqual(kwargs[0], {'read_only':0})
 
-    def test_call_no_qs(self):
+    @mock.patch('zodburi.resolvers.FileStorage')
+    def test_call_no_qs(self, FileStorage):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('file:///tmp/foo/bar')
-        self.assertEqual(args, ('/tmp/foo/bar',))
-        self.assertEqual(kw, {})
+        factory, dbkw = resolver('file:///tmp/foo/bar')
+        factory()
+        FileStorage.assert_called_once_with('/tmp/foo/bar')
 
-    def test_call_abspath(self):
+    @mock.patch('zodburi.resolvers.FileStorage')
+    def test_call_abspath(self, FileStorage):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('file:///tmp/foo/bar?read_only=true')
-        self.assertEqual(args, ('/tmp/foo/bar',))
-        self.assertEqual(kw, {'read_only':1})
+        factory, dbkw = resolver('file:///tmp/foo/bar?read_only=true')
+        factory()
+        FileStorage.assert_called_once_with('/tmp/foo/bar', read_only=1)
 
-    def test_call_abspath_windows(self):
+    @mock.patch('zodburi.resolvers.FileStorage')
+    def test_call_abspath_windows(self, FileStorage):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver(
+        factory, dbkw = resolver(
             'file://C:\\foo\\bar?read_only=true')
-        self.assertEqual(args, ('C:\\foo\\bar',))
-        self.assertEqual(kw, {'read_only':1})
+        factory()
+        FileStorage.assert_called_once_with('C:\\foo\\bar', read_only=1)
 
-    def test_call_normpath(self):
+    @mock.patch('zodburi.resolvers.FileStorage')
+    def test_call_normpath(self, FileStorage):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('file:///tmp/../foo/bar?read_only=true')
-        self.assertEqual(args, ('/foo/bar',))
-        self.assertEqual(kw, {'read_only':1})
+        factory, dbkw = resolver('file:///tmp/../foo/bar?read_only=true')
+        factory()
+        FileStorage.assert_called_once_with('/foo/bar', read_only=1)
 
     def test_invoke_factory_filestorage(self):
         import os
         self.assertFalse(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
         resolver = self._makeOne()
-        k, args, kw, factory = resolver(
-            'file://%s/db.db?quota=200' % self.tmpdir)
-        self.assertEqual(k,
-                         (('%s/db.db' % self.tmpdir,), (('quota', 200),),
-                          (('cache_size', 10000), ('database_name', 'unnamed'),
-                           ('pool_size', 7)))
-                         )
-        factory()
+        factory, dbkw = resolver('file://%s/db.db?quota=200' % self.tmpdir)
+        storage = factory()
+        from ZODB.FileStorage import FileStorage
+        self.assertTrue(isinstance(storage, FileStorage))
+        self.assertEqual(storage._quota, 200)
         self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
-
-    def test_demostorage(self):
-        resolver = self._makeOne()
-        k, args, kw, factory = resolver(
-            'file:///tmp/../foo/bar?demostorage=true')
-        self.assertEqual(args, ('/foo/bar',))
-        self.assertEqual(kw, {})
 
     def test_invoke_factory_demostorage(self):
         import os
         from ZODB.DemoStorage import DemoStorage
         from ZODB.FileStorage import FileStorage
-        DB_FILE = os.path.join(self.tmpdir, 'db.db')
-        self.assertFalse(os.path.exists(DB_FILE))
         resolver = self._makeOne()
-        k, args, kw, factory = resolver(
-            'file://%s/db.db?quota=200&demostorage=true' % self.tmpdir)
-        self.assertEqual(k,
-                         (('%s/db.db' % self.tmpdir,),
-                          (('demostorage', 1),
-                           ('quota', 200),
-                          ),
-                          (('cache_size', 10000),
-                           ('database_name', 'unnamed'),
-                           ('pool_size', 7)
-                          ),
-                         )
-                        )
-        db = factory()
-        self.assertTrue(isinstance(db._storage, DemoStorage))
-        self.assertTrue(isinstance(db._storage.base, FileStorage))
-        self.assertTrue(os.path.exists(DB_FILE))
-
-    def test_blobstorage(self):
-        resolver = self._makeOne()
-        k, args, kw, factory = resolver(
-            ('file:///tmp/../foo/bar'
-             '?blobstorage_dir=/foo/bar&blobstorage_layout=bushy'))
-        self.assertEqual(args, ('/foo/bar',))
-        self.assertEqual(kw, {})
+        factory, dbkw = resolver(
+            'file://%s/db.db?demostorage=true' % self.tmpdir)
+        storage = factory()
+        self.assertTrue(isinstance(storage, DemoStorage))
+        self.assertTrue(isinstance(storage.base, FileStorage))
+        self.assertEqual(dbkw, {})
+        self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
 
     def test_invoke_factory_blobstorage(self):
         import os
@@ -167,34 +142,14 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
         BLOB_DIR = os.path.join(self.tmpdir, 'blob')
         self.assertFalse(os.path.exists(DB_FILE))
         resolver = self._makeOne()
-        k, args, kw, factory = resolver(
+        factory, dbkw = resolver(
             'file://%s/db.db?quota=200'
             '&blobstorage_dir=%s/blob'
             '&blobstorage_layout=bushy' % (self.tmpdir, q(self.tmpdir)))
-        self.assertEqual(k,
-                         (('%s/db.db' % self.tmpdir,),
-                          (('blobstorage_dir', '%s/blob' % self.tmpdir),
-                           ('blobstorage_layout', 'bushy'),
-                           ('quota', 200),
-                          ),
-                          (('cache_size', 10000),
-                           ('database_name', 'unnamed'),
-                           ('pool_size', 7)
-                          ),
-                         )
-                        )
-        db = factory()
-        self.assertTrue(isinstance(db._storage, BlobStorage))
+        storage = factory()
+        self.assertTrue(isinstance(storage, BlobStorage))
         self.assertTrue(os.path.exists(DB_FILE))
         self.assertTrue(os.path.exists(BLOB_DIR))
-
-    def test_blobstorage_and_demostorage(self):
-        resolver = self._makeOne()
-        k, args, kw, factory = resolver(
-            ('file:///tmp/../foo/bar?demostorage=true'
-             '&blobstorage_dir=/foo/bar&blobstorage_layout=bushy'))
-        self.assertEqual(args, ('/foo/bar',))
-        self.assertEqual(kw, {})
 
     def test_invoke_factory_blobstorage_and_demostorage(self):
         import os
@@ -204,36 +159,23 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
         BLOB_DIR = os.path.join(self.tmpdir, 'blob')
         self.assertFalse(os.path.exists(DB_FILE))
         resolver = self._makeOne()
-        k, args, kw, factory = resolver(
+        factory, dbkw = resolver(
             'file://%s/db.db?quota=200&demostorage=true'
             '&blobstorage_dir=%s/blob'
             '&blobstorage_layout=bushy' % (self.tmpdir, q(self.tmpdir)))
-        self.assertEqual(k,
-                         (('%s/db.db' % self.tmpdir,),
-                          (('blobstorage_dir', '%s/blob' % self.tmpdir),
-                           ('blobstorage_layout', 'bushy'),
-                           ('demostorage', 1),
-                           ('quota', 200),
-                          ),
-                          (('cache_size', 10000),
-                           ('database_name', 'unnamed'),
-                           ('pool_size', 7)
-                          ),
-                         )
-                        )
-        db = factory()
-        self.assertTrue(isinstance(db._storage, DemoStorage))
+        storage = factory()
+        self.assertTrue(isinstance(storage, DemoStorage))
         self.assertTrue(os.path.exists(DB_FILE))
         self.assertTrue(os.path.exists(BLOB_DIR))
 
     def test_dbargs(self):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver(
+        factory, dbkw = resolver(
             ('file:///tmp/../foo/bar?connection_pool_size=1'
              '&connection_cache_size=1&database_name=dbname'))
-        self.assertEqual(k[2],
-                         (('cache_size', 1), ('database_name', 'dbname'),
-                          ('pool_size', 1)))
+        self.assertEqual(dbkw, {'connection_cache_size': '1',
+                                'connection_pool_size': '1',
+                                'database_name': 'dbname'})
 
 
 class TestClientStorageURIResolver(unittest.TestCase):
@@ -249,90 +191,62 @@ class TestClientStorageURIResolver(unittest.TestCase):
         resolver = self._makeOne()
         f = resolver.interpret_kwargs
         kwargs = f({'read_only':'1'})
-        self.assertEqual(kwargs, {'read_only':1})
+        self.assertEqual(kwargs[0], {'read_only':1})
         kwargs = f({'read_only':'true'})
-        self.assertEqual(kwargs, {'read_only':1})
+        self.assertEqual(kwargs[0], {'read_only':1})
         kwargs = f({'read_only':'on'})
-        self.assertEqual(kwargs, {'read_only':1})
+        self.assertEqual(kwargs[0], {'read_only':1})
         kwargs = f({'read_only':'off'})
-        self.assertEqual(kwargs, {'read_only':0})
+        self.assertEqual(kwargs[0], {'read_only':0})
         kwargs = f({'read_only':'no'})
-        self.assertEqual(kwargs, {'read_only':0})
+        self.assertEqual(kwargs[0], {'read_only':0})
         kwargs = f({'read_only':'false'})
-        self.assertEqual(kwargs, {'read_only':0})
+        self.assertEqual(kwargs[0], {'read_only':0})
 
-    def test_call_tcp_no_port(self):
+    @mock.patch('zodburi.resolvers.ClientStorage')
+    def test_call_tcp_no_port(self, ClientStorage):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('zeo://localhost?debug=true')
-        self.assertEqual(args, (('localhost', 9991),))
-        self.assertEqual(kw, {'debug':1})
-        self.assertEqual(k,
-                         ((('localhost', 9991),), (('debug', 1),),
-                          (('cache_size', 10000), ('database_name','unnamed'),
-                           ('pool_size', 7))))
+        factory, dbkw = resolver('zeo://localhost?debug=true')
+        factory()
+        ClientStorage.assert_called_once_with(('localhost', 9991), debug=1)
 
-    def test_call_tcp(self):
+    @mock.patch('zodburi.resolvers.ClientStorage')
+    def test_call_tcp(self, ClientStorage):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('zeo://localhost:8080?debug=true')
-        self.assertEqual(args, (('localhost', 8080),))
-        self.assertEqual(kw, {'debug':1})
-        self.assertEqual(k,
-                         ((('localhost', 8080),), (('debug', 1),),
-                          (('cache_size', 10000), ('database_name','unnamed'),
-                           ('pool_size', 7))))
+        factory, dbkw = resolver('zeo://localhost:8080?debug=true')
+        factory()
+        ClientStorage.assert_called_once_with(('localhost', 8080), debug=1)
 
-    def test_call_unix(self):
+    @mock.patch('zodburi.resolvers.ClientStorage')
+    def test_call_unix(self, ClientStorage):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('zeo:///var/sock?debug=true')
-        self.assertEqual(args, ('/var/sock',))
-        self.assertEqual(kw, {'debug':1})
-        self.assertEqual(k,
-                         (('/var/sock',),
-                          (('debug', 1),),
-                          (('cache_size', 10000),
-                           ('database_name', 'unnamed'),
-                           ('pool_size', 7))))
+        factory, dbkw = resolver('zeo:///var/sock?debug=true')
+        factory()
+        ClientStorage.assert_called_once_with('/var/sock', debug=1)
 
-    def test_invoke_factory(self):
+    @mock.patch('zodburi.resolvers.ClientStorage')
+    def test_invoke_factory(self, ClientStorage):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('zeo:///var/nosuchfile?wait=false')
-        self.assertEqual(k, (('/var/nosuchfile',),
-                             (('wait', 0),),
-                             (('cache_size', 10000),
-                              ('database_name', 'unnamed'), ('pool_size', 7))))
-        from ZEO.ClientStorage import ClientDisconnected
-        self.assertRaises(ClientDisconnected, factory)
-
-    def test_demostorage(self):
-        resolver = self._makeOne()
-        k, args, kw, factory = resolver('zeo:///var/sock?demostorage=true')
-        self.assertEqual(args, ('/var/sock',))
-        self.assertEqual(kw, {})
+        factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false')
+        factory()
+        ClientStorage.assert_called_once_with('/var/nosuchfile', wait=0)
 
     def test_invoke_factory_demostorage(self):
+        from ZODB.DemoStorage import DemoStorage
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('zeo:///var/nosuchfile?wait=false'
+        factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false'
                                         '&demostorage=true')
-        self.assertEqual(k, (('/var/nosuchfile',),
-                             (('demostorage', 1),
-                              ('wait', 0),),
-                             (('cache_size', 10000),
-                              ('database_name', 'unnamed'),
-                              ('pool_size', 7),
-                             ),
-                            ))
-        from ZEO.ClientStorage import ClientDisconnected
-        self.assertRaises(ClientDisconnected, factory)
+        self.assertTrue(isinstance(factory(), DemoStorage))
 
     def test_dbargs(self):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('zeo://localhost:8080?debug=true&'
+        factory, dbkw = resolver('zeo://localhost:8080?debug=true&'
                                         'connection_pool_size=1&'
                                         'connection_cache_size=1&'
                                         'database_name=dbname')
-        self.assertEqual(k[2],
-                         (('cache_size', 1), ('database_name', 'dbname'),
-                          ('pool_size', 1)))
+        self.assertEqual(dbkw, {'connection_pool_size': '1',
+                                'connection_cache_size': '1',
+                                'database_name': 'dbname'})
 
 
 class TestZConfigURIResolver(unittest.TestCase):
@@ -353,48 +267,38 @@ class TestZConfigURIResolver(unittest.TestCase):
 
     def test_named_database(self):
         self.tmp.write("""
-        <zodb otherdb>
-          <demostorage>
-          </demostorage>
-        </zodb>
+        <demostorage foo>
+        </demostorage>
 
-        <zodb demodb>
-          <mappingstorage>
-          </mappingstorage>
-        </zodb>
+        <mappingstorage bar>
+        </mappingstorage>
         """)
         self.tmp.flush()
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('zconfig://%s#demodb' % self.tmp.name)
-        db = factory()
+        factory, dbkw = resolver('zconfig://%s#bar' % self.tmp.name)
+        storage = factory()
         from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(db._storage, MappingStorage))
+        self.assertTrue(isinstance(storage, MappingStorage), storage)
 
     def test_anonymous_database(self):
         self.tmp.write("""
-        <zodb>
-          <mappingstorage>
-          </mappingstorage>
-        </zodb>
+        <mappingstorage>
+        </mappingstorage>
 
-        <zodb demodb>
-          <mappingstorage>
-          </mappingstorage>
-        </zodb>
+        <demostorage demo>
+        </demostorage>
         """)
         self.tmp.flush()
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('zconfig://%s' % self.tmp.name)
-        db = factory()
+        factory, dbkw = resolver('zconfig://%s' % self.tmp.name)
+        storage = factory()
         from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(db._storage, MappingStorage))
+        self.assertTrue(isinstance(storage, MappingStorage))
 
     def test_database_not_found(self):
         self.tmp.write("""
-        <zodb x>
-          <mappingstorage>
-          </mappingstorage>
-        </zodb>
+        <mappingstorage x>
+        </mappingstorage>
         """)
         self.tmp.flush()
         resolver = self._makeOne()
@@ -412,22 +316,20 @@ class TestMappingStorageURIResolver(Base, unittest.TestCase):
 
     def test_call_no_qs(self):
         resolver = self._makeOne()
-        k, args, kw, factory = resolver('memory://')
-        self.assertEqual(args, ('',))
-        self.assertEqual(kw, {})
-        db = factory()
+        factory, dbkw = resolver('memory://')
+        self.assertEqual(dbkw, {})
+        storage = factory()
         from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(db._storage, MappingStorage))
+        self.assertTrue(isinstance(storage, MappingStorage))
+        self.assertEqual(storage.__name__, '')
 
     def test_call_with_qs(self):
         uri='memory://storagename?connection_cache_size=100&database_name=fleeb'
         resolver = self._makeOne()
-        k, args, kw, factory = resolver(uri)
-        self.assertEqual(args, ('storagename',))
-        self.assertEqual(kw, {})
-        self.assertEqual(k,  (('storagename',),
-                              (('cache_size', 100), ('database_name', 'fleeb'),
-                               ('pool_size', 7))))
-        db = factory()
+        factory, dbkw = resolver(uri)
+        self.assertEqual(dbkw, {'connection_cache_size': '100',
+                                'database_name': 'fleeb'})
+        storage = factory()
         from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(db._storage, MappingStorage))
+        self.assertTrue(isinstance(storage, MappingStorage))
+        self.assertEqual(storage.__name__, 'storagename')

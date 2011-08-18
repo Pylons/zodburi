@@ -13,6 +13,7 @@ except:
     CHANGES = ''
 
 requires = ['ZODB3']
+tests_require = requires + ['mock']
 
 setup(name='zodburi',
       version='0.1a1',
@@ -31,7 +32,7 @@ setup(name='zodburi',
       include_package_data=True,
       zip_safe=False,
       tests_require = requires,
-      install_requires = requires,
+      install_requires = tests_require,
       test_suite="zodburi",
       )
 

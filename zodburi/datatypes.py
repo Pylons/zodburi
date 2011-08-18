@@ -23,6 +23,16 @@ class SuffixMultiplier:
                 return int(v[:-self._keysz]) * m
         return int(v) * self._default
 
-byte_size = SuffixMultiplier({'kb': 1024,
+convert_bytesize = SuffixMultiplier({'kb': 1024,
                               'mb': 1024*1024,
                               'gb': 1024*1024*1024L,})
+
+
+def convert_int(value):
+    # boolean values are also treated as integers
+    value = value.lower()
+    if value in FALSETYPES:
+        return 0
+    if value in TRUETYPES:
+        return 1
+    return int(value)
