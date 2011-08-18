@@ -8,7 +8,6 @@ from ZODB.FileStorage.FileStorage import FileStorage
 from ZODB.DemoStorage import DemoStorage
 from ZODB.MappingStorage import MappingStorage
 from ZODB.blob import BlobStorage
-from ZODB.DB import DB
 import ZConfig
 
 from zodburi.datatypes import convert_bytesize
@@ -124,7 +123,8 @@ class ClientStorageURIResolver(Resolver):
     _bytesize_args = ('cache_size', )
 
     def __call__(self, uri):
-        # urlparse doesnt understand zeo URLs so force to something that doesn't break
+        # urlparse doesnt understand zeo URLs so force to something that
+        # doesn't break
         uri = uri.replace('zeo://', 'http://', 1)
         (scheme, netloc, path, query, frag) = urlparse.urlsplit(uri)
         if netloc:
@@ -150,20 +150,6 @@ class ClientStorageURIResolver(Resolver):
             def factory():
                 return ClientStorage(*args, **kw)
         return factory, unused
-
-def get_dbkw(kw):
-    dbkw = {}
-    dbkw['cache_size'] = 10000
-    dbkw['pool_size'] = 7
-    dbkw['database_name'] = 'unnamed'
-    if 'connection_cache_size' in kw:
-        dbkw['cache_size'] = int(kw.pop('connection_cache_size'))
-    if 'connection_pool_size' in kw:
-        dbkw['pool_size'] = int(kw.pop('connection_pool_size'))
-    if 'database_name' in kw:
-        dbkw['database_name'] = kw.pop('database_name')
-
-    return dbkw
 
 
 class ZConfigURIResolver(object):
@@ -195,9 +181,7 @@ class ZConfigURIResolver(object):
         return factory.open, {}
 
 
-RESOLVERS = {
-    'zeo':ClientStorageURIResolver(),
-    'file':FileStorageURIResolver(),
-    'zconfig':ZConfigURIResolver(),
-    'memory':MappingStorageURIResolver(),
-    }
+client_storage_resolver = ClientStorageURIResolver()
+file_storage_resolver = FileStorageURIResolver()
+zconfig_resolver = ZConfigURIResolver()
+mapping_storage_resolver = MappingStorageURIResolver()

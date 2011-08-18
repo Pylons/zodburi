@@ -34,5 +34,11 @@ setup(name='zodburi',
       tests_require = requires,
       install_requires = tests_require,
       test_suite="zodburi",
+      entry_points="""\
+      [zodburi.resolvers]
+      zeo = zodburi.resolvers:client_storage_resolver
+      file = zodburi.resolvers:file_storage_resolver
+      zconfig = zodburi.resolvers:zconfig_resolver
+      memory = zodburi.resolvers:mapping_storage_resolver
+      """
       )
-

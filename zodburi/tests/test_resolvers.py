@@ -333,3 +333,19 @@ class TestMappingStorageURIResolver(Base, unittest.TestCase):
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
         self.assertEqual(storage.__name__, 'storagename')
+
+
+class TestEntryPoints(unittest.TestCase):
+
+    def test_it(self):
+        from pkg_resources import load_entry_point
+        from zodburi import resolvers
+        expected = [
+            ('memory', resolvers.MappingStorageURIResolver),
+            ('zeo', resolvers.ClientStorageURIResolver),
+            ('file', resolvers.FileStorageURIResolver),
+            ('zconfig', resolvers.ZConfigURIResolver),
+        ]
+        for name, cls in expected:
+            target = load_entry_point('zodburi', 'zodburi.resolvers', name)
+            self.assertTrue(isinstance(target, cls))
