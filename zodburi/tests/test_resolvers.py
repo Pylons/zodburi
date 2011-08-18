@@ -295,6 +295,19 @@ class TestZConfigURIResolver(unittest.TestCase):
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
 
+    def test_query_string_args(self):
+        self.tmp.write("""
+        <mappingstorage>
+        </mappingstorage>
+
+        <demostorage demo>
+        </demostorage>
+        """)
+        self.tmp.flush()
+        resolver = self._makeOne()
+        factory, dbkw = resolver('zconfig://%s?foo=bar' % self.tmp.name)
+        self.assertEqual(dbkw, {'foo': 'bar'})
+
     def test_database_not_found(self):
         self.tmp.write("""
         <mappingstorage x>

@@ -178,7 +178,7 @@ class ZConfigURIResolver(object):
                 break
         else:
             raise KeyError("No storage named %s found" % frag)
-        return factory.open, {}
+        return factory.open, dict(cgi.parse_qsl(query))
 
 
 client_storage_resolver = ClientStorageURIResolver()
