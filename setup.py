@@ -6,7 +6,7 @@ from setuptools import find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 
 try:
-    README = open(os.path.join(here, 'README.txt')).read()
+    README = open(os.path.join(here, 'README.rst')).read()
     CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 except:
     README = ''
@@ -16,7 +16,7 @@ requires = ['ZODB3']
 tests_require = requires + ['mock']
 
 setup(name='zodburi',
-      version='0.1a1',
+      version='0.0',
       description=('Constructs ZODB storage instances from URIs.'),
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
