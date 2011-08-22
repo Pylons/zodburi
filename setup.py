@@ -16,7 +16,7 @@ requires = ['ZODB3']
 tests_require = requires + ['mock']
 
 setup(name='zodburi',
-      version='0.0',
+      version='0.1b1',
       description=('Constructs ZODB storage instances from URIs.'),
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
