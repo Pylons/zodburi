@@ -47,6 +47,32 @@ class Base:
         for name, value in args.items():
             self.assertEqual(value, 'string')
 
+    def test_float_args(self):
+        resolver = self._makeOne()
+        names = list(resolver._float_args)
+        kwargs = {}
+        for name in names:
+            kwargs[name] = '3.14'
+        args = resolver.interpret_kwargs(kwargs)[0]
+        keys = args.keys()
+        keys.sort()
+        self.assertEqual(keys, names)
+        for name, value in args.items():
+            self.assertEqual(value, 3.14)
+
+    def test_tuple_args(self):
+        resolver = self._makeOne()
+        names = list(resolver._tuple_args)
+        kwargs = {}
+        for name in names:
+            kwargs[name] = 'first,second,third'
+        args = resolver.interpret_kwargs(kwargs)[0]
+        keys = args.keys()
+        keys.sort()
+        self.assertEqual(keys, names)
+        for name, value in args.items():
+            self.assertEqual(value, ('first', 'second', 'third'))
+
 class TestFileStorageURIResolver(Base, unittest.TestCase):
 
     def _getTargetClass(self):
@@ -387,16 +413,99 @@ class TestMappingStorageURIResolver(Base, unittest.TestCase):
         self.assertEqual(storage.__name__, 'storagename')
 
 
+class TestPostgreSQLURIResolver(unittest.TestCase):
+    def _getTargetClass(self):
+        from zodburi.resolvers_relstorage import RelStorageURIResolver
+        return RelStorageURIResolver
+
+    def _makeOne(self):
+        from zodburi.resolvers_relstorage import PostgreSQLAdapterHelper
+        klass = self._getTargetClass()
+        return klass(PostgreSQLAdapterHelper())
+
+    def setUp(self):
+        # relstorage.options.Options is little more than a dict.
+        # We make it comparable to simplify the tests.
+        from relstorage.options import Options
+        Options.__eq__ = lambda s, o: vars(s) == vars(o)
+
+    def test_bool_args(self):
+        resolver = self._makeOne()
+        f = resolver.interpret_kwargs
+        kwargs = f({'read_only':'1'})
+        self.assertEqual(kwargs[0], {'read_only':1})
+        kwargs = f({'read_only':'true'})
+        self.assertEqual(kwargs[0], {'read_only':1})
+        kwargs = f({'read_only':'on'})
+        self.assertEqual(kwargs[0], {'read_only':1})
+        kwargs = f({'read_only':'off'})
+        self.assertEqual(kwargs[0], {'read_only':0})
+        kwargs = f({'read_only':'no'})
+        self.assertEqual(kwargs[0], {'read_only':0})
+        kwargs = f({'read_only':'false'})
+        self.assertEqual(kwargs[0], {'read_only':0})
+
+    @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
+    @mock.patch('zodburi.resolvers_relstorage.RelStorage')
+    def test_call(self, RelStorage, PostgreSQLAdapter):
+        from relstorage.options import Options
+        resolver = self._makeOne()
+        factory, dbkw = resolver('postgres://someuser:somepass@somehost:5432/somedb?read_only=1')
+        factory()
+
+        expected_options = Options(read_only=1)
+        PostgreSQLAdapter.assert_called_once_with(dsn="dbname='somedb' user='someuser' password='somepass' "
+                                                      "host='somehost' port='5432'",
+                                                  options=expected_options)
+        RelStorage.assert_called_once_with(adapter=PostgreSQLAdapter(), options=expected_options)
+
+    @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
+    @mock.patch('zodburi.resolvers_relstorage.RelStorage')
+    def test_call_adapter_options(self, RelStorage, PostgreSQLAdapter):
+        from relstorage.options import Options
+        resolver = self._makeOne()
+        factory, dbkw = resolver('postgres://someuser:somepass@somehost:5432/somedb?read_only=1'
+                                 '&connect_timeout=10')
+        factory()
+
+        expected_options = Options(read_only=1)
+        PostgreSQLAdapter.assert_called_once_with(dsn="dbname='somedb' user='someuser' password='somepass' "
+                                                      "host='somehost' port='5432' connect_timeout='10'",
+                                                  options=expected_options)
+        RelStorage.assert_called_once_with(adapter=PostgreSQLAdapter(), options=expected_options)
+
+
+    @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
+    @mock.patch('zodburi.resolvers_relstorage.RelStorage')
+    def test_invoke_factory_demostorage(self, RelStorage, PostgreSQLAdapter):
+        from ZODB.DemoStorage import DemoStorage
+        resolver = self._makeOne()
+        factory, dbkw = resolver('postgres://someuser:somepass@somehost:5432/somedb?read_only=1'
+                                 '&demostorage=true')
+        self.assertTrue(isinstance(factory(), DemoStorage))
+
+    def test_dbargs(self):
+        resolver = self._makeOne()
+        factory, dbkw = resolver('postgres://someuser:somepass@somehost:5432/somedb?read_only=1&'
+                                 'connection_pool_size=1&'
+                                 'connection_cache_size=1&'
+                                 'database_name=dbname')
+        self.assertEqual(dbkw, {'connection_pool_size': '1',
+                                'connection_cache_size': '1',
+                                'database_name': 'dbname'})
+
+
 class TestEntryPoints(unittest.TestCase):
 
     def test_it(self):
         from pkg_resources import load_entry_point
-        from zodburi import resolvers
+        from zodburi import resolvers, resolvers_relstorage
         expected = [
             ('memory', resolvers.MappingStorageURIResolver),
             ('zeo', resolvers.ClientStorageURIResolver),
             ('file', resolvers.FileStorageURIResolver),
             ('zconfig', resolvers.ZConfigURIResolver),
+            ('postgres', resolvers_relstorage.RelStorageURIResolver),
         ]
         for name, cls in expected:
             target = load_entry_point('zodburi', 'zodburi.resolvers', name)

@@ -19,6 +19,8 @@ class Resolver(object):
     _int_args = ()
     _string_args = ()
     _bytesize_args = ()
+    _float_args = ()
+    _tuple_args = ()
 
     def interpret_kwargs(self, kw):
         unused = kw.copy()

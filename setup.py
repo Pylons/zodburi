@@ -12,7 +12,7 @@ except:
     README = ''
     CHANGES = ''
 
-requires = ['ZODB3']
+requires = ['ZODB3',]
 tests_require = requires + ['mock']
 
 setup(name='zodburi',
@@ -40,5 +40,9 @@ setup(name='zodburi',
       file = zodburi.resolvers:file_storage_resolver
       zconfig = zodburi.resolvers:zconfig_resolver
       memory = zodburi.resolvers:mapping_storage_resolver
-      """
+      postgres = zodburi.resolvers_relstorage:postgresql_resolver [postgres]
+      """,
+      extras_require={
+        'postgres': ['RelStorage', 'psycopg2'],
+      },
       )
