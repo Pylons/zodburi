@@ -13,6 +13,7 @@ import ZConfig
 
 from zodburi.datatypes import convert_bytesize
 from zodburi.datatypes import convert_int
+from zodburi.datatypes import convert_tuple
 
 
 class Resolver(object):
@@ -26,15 +27,14 @@ class Resolver(object):
         unused = kw.copy()
         new = {}
         convert_string = lambda s: s
-        converters = (
-            convert_int,
-            convert_string,
-            convert_bytesize)
-        args = (
-            self._int_args,
-            self._string_args,
-            self._bytesize_args)
-        for convert, arg_names in zip(converters, args):
+        converters = [
+            (convert_int, self._int_args),
+            (convert_string, self._string_args),
+            (convert_bytesize, self._bytesize_args),
+            (float, self._float_args),
+            (convert_tuple, self._tuple_args),
+        ]
+        for convert, arg_names in converters:
             for arg_name in arg_names:
                 value = unused.pop(arg_name, None)
                 if value is not None:

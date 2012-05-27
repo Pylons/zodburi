@@ -36,3 +36,6 @@ def convert_int(value):
     if value in TRUETYPES:
         return 1
     return int(value)
+
+def convert_tuple(value):
+    return tuple(value.split(','))
