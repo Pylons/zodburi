@@ -43,9 +43,10 @@ passing to the ``ZODB.DB.DB`` constructor.  For example:
 URI Schemes
 -----------
 
-The URI schemes currently recognized in the ``zodbconn.uri`` setting are
-``file://``, ``zeo://``, ``zconfig://`` and ``memory://``.  Documentation for
-these URI scheme syntaxes are below.
+The URI schemes currently recognized in the ``zodbconn.uri`` setting
+are ``file://``, ``zeo://``, ``zconfig://``, ``memory://``
+``postgres://``.  Documentation for these URI scheme syntaxes are
+below.
 
 ``file://`` URI scheme
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -285,6 +286,110 @@ Example
 An example that combines a dbname with a query string::
 
    memory://storagename?connection_cache_size=100&database_name=fleeb
+
+``postgres://`` URI scheme
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``postgres://`` URI scheme can be passed as ``zodbconn.uri`` to
+create a RelStorage PostgresSQL database factory.  The uri should
+contain the user, the password, the host, the port and the db name
+e.g.::
+
+  postgres://someuser:somepass@somehost:5432/somedb?connection_cache_size=20000
+
+
+The URI scheme also accepts query string arguments.  The query string
+arguments honored by this scheme are as follows.
+
+RelStorage-constructor related
+++++++++++++++++++++++++++++++
+
+These arguments generally inform the RelStorage constructor about
+values of the same names.
+
+poll_interval
+  int
+cache_local_mb
+  int
+commit_lock_timeout
+  int
+commit_lock_id
+  int
+read_only
+  boolean
+shared_blob_dir
+  boolean
+keep_history
+  boolean
+pack_gc
+  boolean
+pack_dry_run
+  boolean
+strict_tpc
+  boolean
+create
+  boolean
+blob_cache_size
+  bytesize
+blob_cache_size_check
+  bytesize
+blob_cache_chunk_size
+  bytesize
+replica_timeout
+  float
+pack_batch_timeout
+  float
+pack_duty_cycle
+  float
+pack_max_delay
+  float
+name
+  string
+blob_dir
+  string
+replica_conf
+  string
+cache_module_name
+  string
+cache_prefix
+  string
+cache_delta_size_limit
+  string
+cache_servers
+  string of the for "first,second,third"
+
+Misc
+++++
+
+demostorage
+  boolean (if true, wrap RelStorage in a DemoStorage)
+
+
+Connection-related
+++++++++++++++++++
+
+These arguments relate to connections created from the database.
+
+connection_cache_size
+  integer (default 10000)
+connection_pool_size
+  integer (default 7)
+
+Database-related
+++++++++++++++++
+
+These arguments relate to the database (as opposed to storage)
+settings.
+
+database_name
+  string
+
+Example
++++++++
+
+An example that combines a path with a query string::
+
+  postgres://someuser:somepass@somehost:5432/somedb?connection_cache_size=20000
 
 More Information
 ----------------
