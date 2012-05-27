@@ -1,4 +1,5 @@
 import os
+import sys
 
 from setuptools import setup
 from setuptools import find_packages
@@ -13,6 +14,9 @@ except:
     CHANGES = ''
 
 requires = ['ZODB3']
+if sys.version_info[:2] < (2, 6):
+    requires.insert(0, 'zope.interface>=3.6.0,<4.0dev')
+    requires.insert(0, 'transaction<1.2')
 tests_require = requires + ['mock']
 
 setup(name='zodburi',
