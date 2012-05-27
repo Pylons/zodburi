@@ -415,11 +415,11 @@ class TestMappingStorageURIResolver(Base, unittest.TestCase):
 
 class TestPostgreSQLURIResolver(unittest.TestCase):
     def _getTargetClass(self):
-        from zodburi.resolvers import RelStorageURIResolver
+        from zodburi.resolvers_relstorage import RelStorageURIResolver
         return RelStorageURIResolver
 
     def _makeOne(self):
-        from zodburi.resolvers import PostgreSQLAdapterHelper
+        from zodburi.resolvers_relstorage import PostgreSQLAdapterHelper
         klass = self._getTargetClass()
         return klass(PostgreSQLAdapterHelper())
 
@@ -445,8 +445,8 @@ class TestPostgreSQLURIResolver(unittest.TestCase):
         kwargs = f({'read_only':'false'})
         self.assertEqual(kwargs[0], {'read_only':0})
 
-    @mock.patch('zodburi.resolvers.PostgreSQLAdapter')
-    @mock.patch('zodburi.resolvers.RelStorage')
+    @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
+    @mock.patch('zodburi.resolvers_relstorage.RelStorage')
     def test_call(self, RelStorage, PostgreSQLAdapter):
         from relstorage.options import Options
         resolver = self._makeOne()
@@ -459,8 +459,8 @@ class TestPostgreSQLURIResolver(unittest.TestCase):
                                                   options=expected_options)
         RelStorage.assert_called_once_with(adapter=PostgreSQLAdapter(), options=expected_options)
 
-    @mock.patch('zodburi.resolvers.PostgreSQLAdapter')
-    @mock.patch('zodburi.resolvers.RelStorage')
+    @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
+    @mock.patch('zodburi.resolvers_relstorage.RelStorage')
     def test_call_adapter_options(self, RelStorage, PostgreSQLAdapter):
         from relstorage.options import Options
         resolver = self._makeOne()
@@ -475,8 +475,8 @@ class TestPostgreSQLURIResolver(unittest.TestCase):
         RelStorage.assert_called_once_with(adapter=PostgreSQLAdapter(), options=expected_options)
 
 
-    @mock.patch('zodburi.resolvers.PostgreSQLAdapter')
-    @mock.patch('zodburi.resolvers.RelStorage')
+    @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
+    @mock.patch('zodburi.resolvers_relstorage.RelStorage')
     def test_invoke_factory_demostorage(self, RelStorage, PostgreSQLAdapter):
         from ZODB.DemoStorage import DemoStorage
         resolver = self._makeOne()
@@ -499,13 +499,13 @@ class TestEntryPoints(unittest.TestCase):
 
     def test_it(self):
         from pkg_resources import load_entry_point
-        from zodburi import resolvers
+        from zodburi import resolvers, resolvers_relstorage
         expected = [
             ('memory', resolvers.MappingStorageURIResolver),
             ('zeo', resolvers.ClientStorageURIResolver),
             ('file', resolvers.FileStorageURIResolver),
             ('zconfig', resolvers.ZConfigURIResolver),
-            ('postgres', resolvers.RelStorageURIResolver),
+            ('postgres', resolvers_relstorage.RelStorageURIResolver),
         ]
         for name, cls in expected:
             target = load_entry_point('zodburi', 'zodburi.resolvers', name)
