@@ -1,3 +1,18 @@
+``zodburi`` Changelog
+=====================
+
+After 1.0b1 (unreleased)
+------------------------
+
+- Added support for ``postgres://`` URIs.  Thanks to Georges Dubus for
+  the patch!
+
+- Pinned dependencies to Python 2.5-compatible versions when testing with
+  tox under Python 2.5.
+
+- Updated the documentation for publication to `ReadTheDocs
+  <http://docs.pylonsproject.org/projects/zodburi/dev/>`_
+
 1.0b1 (2011-08-21)
 ------------------
 
