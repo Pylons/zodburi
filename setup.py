@@ -20,7 +20,7 @@ if sys.version_info[:2] < (2, 6):
 tests_require = requires + ['mock']
 
 setup(name='zodburi',
-      version='1.0b1',
+      version='1.0',
       description=('Constructs ZODB storage instances from URIs.'),
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[

@@ -1,8 +1,8 @@
 ``zodburi`` Changelog
 =====================
 
-After 1.0b1 (unreleased)
-------------------------
+1.0 (2012-06-07)
+----------------
 
 - Added support for ``postgres://`` URIs.  Thanks to Georges Dubus for
   the patch!
