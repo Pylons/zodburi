@@ -97,4 +97,5 @@ Contributors
 ------------
 
 - Chris McDonough, 2011/08/18
-- Georges Dubus 2012/05/27
+- Georges Dubus, 2012/05/27
+- Tres Seaver, 2012/05/27
