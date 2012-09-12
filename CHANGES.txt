@@ -1,7 +1,7 @@
 ``zodburi`` Changelog
 =====================
 
-1.1 (unreleased)
+1.1 (2012-09-12)
 ----------------
 
 - Removed support for ``postgres://`` URIs, which will now be provided by
