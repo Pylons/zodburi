@@ -408,99 +408,6 @@ class TestMappingStorageURIResolver(Base, unittest.TestCase):
         self.assertTrue(isinstance(storage, MappingStorage))
         self.assertEqual(storage.__name__, 'storagename')
 
-try:
-    from zodburi.resolvers_relstorage import RelStorageURIResolver
-except ImportError: #pragma NO COVER
-    pass
-else:
-    class TestPostgreSQLURIResolver(unittest.TestCase, Base):
-        def _getTargetClass(self):
-            from zodburi.resolvers_relstorage import RelStorageURIResolver
-            return RelStorageURIResolver
-
-        def _makeOne(self):
-            from zodburi.resolvers_relstorage import PostgreSQLAdapterHelper
-            klass = self._getTargetClass()
-            return klass(PostgreSQLAdapterHelper())
-
-        def setUp(self):
-            # relstorage.options.Options is little more than a dict.
-            # We make it comparable to simplify the tests.
-            from relstorage.options import Options
-            Options.__eq__ = lambda s, o: vars(s) == vars(o)
-
-        def test_bool_args(self):
-            resolver = self._makeOne()
-            f = resolver.interpret_kwargs
-            kwargs = f({'read_only':'1'})
-            self.assertEqual(kwargs[0], {'read_only':1})
-            kwargs = f({'read_only':'true'})
-            self.assertEqual(kwargs[0], {'read_only':1})
-            kwargs = f({'read_only':'on'})
-            self.assertEqual(kwargs[0], {'read_only':1})
-            kwargs = f({'read_only':'off'})
-            self.assertEqual(kwargs[0], {'read_only':0})
-            kwargs = f({'read_only':'no'})
-            self.assertEqual(kwargs[0], {'read_only':0})
-            kwargs = f({'read_only':'false'})
-            self.assertEqual(kwargs[0], {'read_only':0})
-
-        @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
-        @mock.patch('zodburi.resolvers_relstorage.RelStorage')
-        def test_call(self, RelStorage, PostgreSQLAdapter):
-            from relstorage.options import Options
-            resolver = self._makeOne()
-            factory, dbkw = resolver(
-                'postgres://someuser:somepass@somehost:5432/somedb'
-                '?read_only=1')
-            factory()
-
-            expected_options = Options(read_only=1)
-            PostgreSQLAdapter.assert_called_once_with(
-                dsn="dbname='somedb' user='someuser' password='somepass' "
-                    "host='somehost' port='5432'", options=expected_options)
-            RelStorage.assert_called_once_with(
-                adapter=PostgreSQLAdapter(), options=expected_options)
-
-        @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
-        @mock.patch('zodburi.resolvers_relstorage.RelStorage')
-        def test_call_adapter_options(self, RelStorage, PostgreSQLAdapter):
-            from relstorage.options import Options
-            resolver = self._makeOne()
-            factory, dbkw = resolver(
-                'postgres://someuser:somepass@somehost:5432/somedb'
-                '?read_only=1&connect_timeout=10')
-            factory()
-
-            expected_options = Options(read_only=1)
-            PostgreSQLAdapter.assert_called_once_with(
-                dsn="dbname='somedb' user='someuser' password='somepass' "
-                    "host='somehost' port='5432' connect_timeout='10'",
-                options=expected_options)
-            RelStorage.assert_called_once_with(
-                adapter=PostgreSQLAdapter(), options=expected_options)
-
-
-        @mock.patch('zodburi.resolvers_relstorage.PostgreSQLAdapter')
-        @mock.patch('zodburi.resolvers_relstorage.RelStorage')
-        def test_invoke_factory_demostorage(self, RelStorage, PostgreSQLAdapter):
-            from ZODB.DemoStorage import DemoStorage
-            resolver = self._makeOne()
-            factory, dbkw = resolver(
-                'postgres://someuser:somepass@somehost:5432/somedb'
-                '?read_only=1&demostorage=true')
-            self.assertTrue(isinstance(factory(), DemoStorage))
-
-        def test_dbargs(self):
-            resolver = self._makeOne()
-            factory, dbkw = resolver(
-                'postgres://someuser:somepass@somehost:5432/somedb'
-                '?read_only=1&connection_pool_size=1&connection_cache_size=1'
-                '&database_name=dbname')
-            self.assertEqual(dbkw, {'connection_pool_size': '1',
-                                    'connection_cache_size': '1',
-                                    'database_name': 'dbname'})
-
 
 class TestEntryPoints(unittest.TestCase):
 
@@ -513,13 +420,6 @@ class TestEntryPoints(unittest.TestCase):
             ('file', resolvers.FileStorageURIResolver),
             ('zconfig', resolvers.ZConfigURIResolver),
         ]
-        try:
-            from zodburi.resolvers_relstorage import RelStorageURIResolver
-        except ImportError: #pragma NO COVER
-            pass
-        else:
-            expected.append(
-                ('postgres', RelStorageURIResolver))
         for name, cls in expected:
             target = load_entry_point('zodburi', 'zodburi.resolvers', name)
             self.assertTrue(isinstance(target, cls))
