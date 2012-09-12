@@ -1,6 +1,13 @@
 ``zodburi`` Changelog
 =====================
 
+1.1 (unreleased)
+----------------
+
+- Removed support for ``postgres://`` URIs, which will now be provided by
+  the ``relstorage`` package.  Thanks to Georges Dubus for
+  the patch!
+
 1.0 (2012-06-07)
 ----------------
 
