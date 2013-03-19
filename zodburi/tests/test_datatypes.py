@@ -20,6 +20,10 @@ class SuffixMultiplierTests(unittest.TestCase):
         self.assertEqual(sm._default, 1)
         self.assertEqual(sm._keysz, None)
 
+    def test_ctor_w_explicit_default(self):
+        sm = self._makeOne(default=3)
+        self.assertEqual(sm._default, 3)
+
     def test_ctor_w_normal_suffixes(self):
         SFX = {'aaa': 2, 'bbb': 3}
         sm = self._makeOne(SFX)
