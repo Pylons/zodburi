@@ -47,6 +47,7 @@ class Base:
 
     def test_float_args(self):
         resolver = self._makeOne()
+        resolver._float_args = ('pi', 'PI')
         names = sorted(resolver._float_args)
         kwargs = {}
         for name in names:
@@ -59,6 +60,7 @@ class Base:
 
     def test_tuple_args(self):
         resolver = self._makeOne()
+        resolver._tuple_args = ('foo', 'bar')
         names = sorted(resolver._tuple_args)
         kwargs = {}
         for name in names:
