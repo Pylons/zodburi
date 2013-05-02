@@ -4,7 +4,9 @@
 Unreleased
 ----------
 
-- Fix 'zconfig:' URIs under Python 2.7.  The code worked around a bug in
+- Automated building the Sphinx docs via ``tox``.
+
+- Fixed 'zconfig:' URIs under Python 2.7.  The code worked around a bug in
   the stdlib's 'urlparse.urlsplit' for Python < 2.7; that workaround broke
   under 2.7.  See https://github.com/Pylons/zodburi/issues/5
 
