@@ -168,9 +168,9 @@ class ZConfigURIResolver(object):
 
     def __call__(self, uri):
         (scheme, netloc, path, query, frag) = urlparse.urlsplit(uri)
-        if sys.version_info[:2] == (2, 6): #pragma NO COVER Python2.6-only
-            # 2.6 urlparse doesnt understand file URLs and stuffs everything 
-            # into path
+        if sys.version_info[:3] < (2, 7, 4): #pragma NO COVER
+            # urlparse used not to allow fragments in non-standard schemes,
+            # stuffed everything into 'path'
             (scheme, netloc, path, query, frag
             ) = urlparse.urlsplit('http:' + path)
         path = os.path.normpath(path)
