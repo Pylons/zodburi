@@ -1,6 +1,5 @@
 from io import BytesIO
 import os
-import sys
 
 from ZConfig import loadConfig
 from ZConfig import loadSchemaFile
@@ -17,6 +16,9 @@ from zodburi.datatypes import convert_tuple
 from zodburi._compat import parse_qsl
 from zodburi._compat import urlsplit
 
+# Capability test for older Pythons (2.x < 2.7.4, 3.x < 3.2.4)
+(scheme, netloc, path, query, frag) = urlsplit('scheme:///path/#frag')
+_BROKEN_URLSPLIT = frag != 'frag'
 
 class Resolver(object):
     _int_args = ()
@@ -169,7 +171,7 @@ class ZConfigURIResolver(object):
 
     def __call__(self, uri):
         (scheme, netloc, path, query, frag) = urlsplit(uri)
-        if sys.version_info[:3] < (2, 7, 4): #pragma NO COVER
+        if _BROKEN_URLSPLIT: #pragma NO COVER
             # urlsplit used not to allow fragments in non-standard schemes,
             # stuffed everything into 'path'
             (scheme, netloc, path, query, frag
