@@ -1,20 +1,21 @@
-import cgi
-from cStringIO import StringIO
+from io import BytesIO
 import os
 import sys
-import urlparse
 
-from ZODB.config import ZODBDatabase
+from ZConfig import loadConfig
+from ZConfig import loadSchemaFile
 from ZEO.ClientStorage import ClientStorage
-from ZODB.FileStorage.FileStorage import FileStorage
-from ZODB.DemoStorage import DemoStorage
-from ZODB.MappingStorage import MappingStorage
 from ZODB.blob import BlobStorage
-import ZConfig
+from ZODB.config import ZODBDatabase
+from ZODB.DemoStorage import DemoStorage
+from ZODB.FileStorage.FileStorage import FileStorage
+from ZODB.MappingStorage import MappingStorage
 
 from zodburi.datatypes import convert_bytesize
 from zodburi.datatypes import convert_int
 from zodburi.datatypes import convert_tuple
+from zodburi._compat import parse_qsl
+from zodburi._compat import urlsplit
 
 
 class Resolver(object):
@@ -55,7 +56,7 @@ class MappingStorageURIResolver(Resolver):
             query = ''
         else:
             name, query = result
-        kw = dict(cgi.parse_qsl(query))
+        kw = dict(parse_qsl(query))
         kw, unused = self.interpret_kwargs(kw)
         args = (name,)
         def factory():
@@ -70,7 +71,7 @@ class FileStorageURIResolver(Resolver):
     _bytesize_args = ('quota',)
 
     def __call__(self, uri):
-        # we can't use urlparse.urlsplit here due to Windows filenames
+        # we can't use urlsplit here due to Windows filenames
         prefix, rest = uri.split('file://', 1)
         result = rest.split('?', 1)
         if len(result) == 1:
@@ -80,7 +81,7 @@ class FileStorageURIResolver(Resolver):
             path, query = result
         path = os.path.normpath(path)
         args = (path,)
-        kw = dict(cgi.parse_qsl(query))
+        kw = dict(parse_qsl(query))
         kw, unused = self.interpret_kwargs(kw)
         demostorage = False
 
@@ -127,10 +128,10 @@ class ClientStorageURIResolver(Resolver):
     _bytesize_args = ('cache_size', )
 
     def __call__(self, uri):
-        # urlparse doesnt understand zeo URLs so force to something that
+        # urlsplit doesnt understand zeo URLs so force to something that
         # doesn't break
         uri = uri.replace('zeo://', 'http://', 1)
-        (scheme, netloc, path, query, frag) = urlparse.urlsplit(uri)
+        (scheme, netloc, path, query, frag) = urlsplit(uri)
         if netloc:
             # TCP URL
             if ':' in netloc:
@@ -144,7 +145,7 @@ class ClientStorageURIResolver(Resolver):
             # Unix domain socket URL
             path = os.path.normpath(path)
             args = (path,)
-        kw = dict(cgi.parse_qsl(query))
+        kw = dict(parse_qsl(query))
         kw, unused = self.interpret_kwargs(kw)
         if 'demostorage' in kw:
             kw.pop('demostorage')
@@ -158,7 +159,7 @@ class ClientStorageURIResolver(Resolver):
 
 class ZConfigURIResolver(object):
 
-    schema_xml_template = """
+    schema_xml_template = b"""
     <schema>
         <import package="ZODB"/>
         <multisection type="ZODB.storage" attribute="storages" />
@@ -167,16 +168,16 @@ class ZConfigURIResolver(object):
     """
 
     def __call__(self, uri):
-        (scheme, netloc, path, query, frag) = urlparse.urlsplit(uri)
+        (scheme, netloc, path, query, frag) = urlsplit(uri)
         if sys.version_info[:3] < (2, 7, 4): #pragma NO COVER
-            # urlparse used not to allow fragments in non-standard schemes,
+            # urlsplit used not to allow fragments in non-standard schemes,
             # stuffed everything into 'path'
             (scheme, netloc, path, query, frag
-            ) = urlparse.urlsplit('http:' + path)
+            ) = urlsplit('http:' + path)
         path = os.path.normpath(path)
         schema_xml = self.schema_xml_template
-        schema = ZConfig.loadSchemaFile(StringIO(schema_xml))
-        config, handler = ZConfig.loadConfig(schema, path)
+        schema = loadSchemaFile(BytesIO(schema_xml))
+        config, handler = loadConfig(schema, path)
         for config_item in config.databases + config.storages:
             if not frag:
                 # use the first defined in the file
@@ -198,7 +199,7 @@ class ZConfigURIResolver(object):
                 dbkw['database_name'] = config.database_name
         else:
             factory = config_item
-            dbkw = dict(cgi.parse_qsl(query))
+            dbkw = dict(parse_qsl(query))
 
         return factory.open, dbkw
 

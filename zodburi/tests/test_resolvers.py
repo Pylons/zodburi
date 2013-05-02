@@ -27,8 +27,7 @@ class Base:
         for name in names:
             kwargs[name] = '10'
         args = resolver.interpret_kwargs(kwargs)[0]
-        keys = args.keys()
-        keys.sort()
+        keys = sorted(args.keys())
         self.assertEqual(sorted(keys), sorted(names))
         for name, value in args.items():
             self.assertEqual(value, 10)
@@ -160,8 +159,8 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
 
     def test_invoke_factory_blobstorage(self):
         import os
-        from urllib import quote as q
         from ZODB.blob import BlobStorage
+        from .._compat import quote as q
         DB_FILE = os.path.join(self.tmpdir, 'db.db')
         BLOB_DIR = os.path.join(self.tmpdir, 'blob')
         self.assertFalse(os.path.exists(DB_FILE))
@@ -177,8 +176,8 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
 
     def test_invoke_factory_blobstorage_and_demostorage(self):
         import os
-        from urllib import quote as q
         from ZODB.DemoStorage import DemoStorage
+        from .._compat import quote as q
         DB_FILE = os.path.join(self.tmpdir, 'db.db')
         BLOB_DIR = os.path.join(self.tmpdir, 'blob')
         self.assertFalse(os.path.exists(DB_FILE))
@@ -290,7 +289,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         self.tmp.close()
 
     def test_named_storage(self):
-        self.tmp.write("""
+        self.tmp.write(b"""
         <demostorage foo>
         </demostorage>
 
@@ -305,7 +304,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         self.assertTrue(isinstance(storage, MappingStorage), storage)
 
     def test_anonymous_storage(self):
-        self.tmp.write("""
+        self.tmp.write(b"""
         <mappingstorage>
         </mappingstorage>
 
@@ -321,7 +320,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         self.assertEqual(dbkw, {})
 
     def test_query_string_args(self):
-        self.tmp.write("""
+        self.tmp.write(b"""
         <mappingstorage>
         </mappingstorage>
 
@@ -334,7 +333,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         self.assertEqual(dbkw, {'foo': 'bar'})
 
     def test_storage_not_found(self):
-        self.tmp.write("""
+        self.tmp.write(b"""
         <mappingstorage x>
         </mappingstorage>
         """)
@@ -343,7 +342,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         self.assertRaises(KeyError, resolver, 'zconfig://%s#y' % self.tmp.name)
 
     def test_anonymous_database(self):
-        self.tmp.write("""
+        self.tmp.write(b"""
         <zodb>
           <mappingstorage>
           </mappingstorage>
@@ -360,7 +359,7 @@ class TestZConfigURIResolver(unittest.TestCase):
             'connection_pool_size': 7})
 
     def test_named_database(self):
-        self.tmp.write("""
+        self.tmp.write(b"""
         <zodb x>
           <mappingstorage>
           </mappingstorage>
