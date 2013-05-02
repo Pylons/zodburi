@@ -10,3 +10,4 @@ zodburi/coverage.xml
 nosetests.xml
 docs/_build/
 dist
+coverage.xml
