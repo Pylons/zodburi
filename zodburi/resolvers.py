@@ -1,6 +1,7 @@
-import os
 import cgi
 from cStringIO import StringIO
+import os
+import sys
 import urlparse
 
 from ZODB.config import ZODBDatabase
@@ -167,8 +168,11 @@ class ZConfigURIResolver(object):
 
     def __call__(self, uri):
         (scheme, netloc, path, query, frag) = urlparse.urlsplit(uri)
-         # urlparse doesnt understand file URLs and stuffs everything into path
-        (scheme, netloc, path, query, frag) = urlparse.urlsplit('http:' + path)
+        if sys.version_info[:2] == (2, 6):
+            # 2.6 urlparse doesnt understand file URLs and stuffs everything
+            # into path
+            (scheme, netloc, path, query, frag
+            ) = urlparse.urlsplit('http:' + path)
         path = os.path.normpath(path)
         schema_xml = self.schema_xml_template
         schema = ZConfig.loadSchemaFile(StringIO(schema_xml))

@@ -4,6 +4,10 @@
 Unreleased
 ----------
 
+- Fix 'zconfig:' URIs under Python 2.7.  The code worked around a bug in
+  the stdlib's 'urlparse.urlsplit' for Python < 2.7; that workaround broke
+  under 2.7.  See https://github.com/Pylons/zodburi/issues/5
+
 - Dropped support for Python 2.5.
 
 1.1 (2012-09-12)
