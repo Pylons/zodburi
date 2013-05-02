@@ -263,15 +263,19 @@ class TestClientStorageURIResolver(unittest.TestCase):
     def test_invoke_factory(self, ClientStorage):
         resolver = self._makeOne()
         factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false')
-        factory()
+        storage = factory()
+        storage.close()
         ClientStorage.assert_called_once_with('/var/nosuchfile', wait=0)
 
-    def test_invoke_factory_demostorage(self):
+    @mock.patch('zodburi.resolvers.ClientStorage')
+    def test_invoke_factory_demostorage(self, ClientStorage):
         from ZODB.DemoStorage import DemoStorage
         resolver = self._makeOne()
         factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false'
                                         '&demostorage=true')
-        self.assertTrue(isinstance(factory(), DemoStorage))
+        storage = factory()
+        storage.close()
+        self.assertTrue(isinstance(storage, DemoStorage))
 
     def test_dbargs(self):
         resolver = self._makeOne()
