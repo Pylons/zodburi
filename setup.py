@@ -20,6 +20,7 @@ except:
 requires = ['ZODB3']
 tests_require = requires + ['mock']
 testing_extras = tests_require + ['nose', 'coverage']
+docs_extras = tests_require + ['Sphinx']
 
 setup(name='zodburi',
       version='1.2dev',
@@ -51,5 +52,6 @@ setup(name='zodburi',
       """,
       extras_require = {
         'testing': testing_extras,
+        'docs': docs_extras,
       },
       )

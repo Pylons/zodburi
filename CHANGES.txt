@@ -4,6 +4,9 @@
 Unreleased
 ----------
 
+- Added ``setup.py docs`` alias (runs ``setup.py develop`` and installs
+  documentation dependencies).
+
 - Added ``setup.py dev`` alias (runs ``setup.py develop`` and installs
   testing dependencies).
 
