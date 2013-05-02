@@ -23,8 +23,8 @@ testing_extras = tests_require + ['nose', 'coverage']
 docs_extras = tests_require + ['Sphinx']
 
 setup(name='zodburi',
-      version='1.2dev',
-      description=('Constructs ZODB storage instances from URIs.'),
+      version='2.0b1',
+      description=('Construct ZODB storage instances from URIs.'),
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
         "Intended Audience :: Developers",
