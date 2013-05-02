@@ -135,14 +135,17 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
 
     def test_invoke_factory_filestorage(self):
         import os
+        from ZODB.FileStorage import FileStorage
         self.assertFalse(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
         resolver = self._makeOne()
         factory, dbkw = resolver('file://%s/db.db?quota=200' % self.tmpdir)
         storage = factory()
-        from ZODB.FileStorage import FileStorage
         self.assertTrue(isinstance(storage, FileStorage))
-        self.assertEqual(storage._quota, 200)
-        self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
+        try:
+            self.assertEqual(storage._quota, 200)
+            self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
+        finally:
+            storage.close()
 
     def test_invoke_factory_demostorage(self):
         import os
@@ -154,8 +157,11 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
         storage = factory()
         self.assertTrue(isinstance(storage, DemoStorage))
         self.assertTrue(isinstance(storage.base, FileStorage))
-        self.assertEqual(dbkw, {})
-        self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
+        try:
+            self.assertEqual(dbkw, {})
+            self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
+        finally:
+            storage.close()
 
     def test_invoke_factory_blobstorage(self):
         import os
@@ -171,8 +177,11 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
             '&blobstorage_layout=bushy' % (self.tmpdir, q(self.tmpdir)))
         storage = factory()
         self.assertTrue(isinstance(storage, BlobStorage))
-        self.assertTrue(os.path.exists(DB_FILE))
-        self.assertTrue(os.path.exists(BLOB_DIR))
+        try:
+            self.assertTrue(os.path.exists(DB_FILE))
+            self.assertTrue(os.path.exists(BLOB_DIR))
+        finally:
+            storage.close()
 
     def test_invoke_factory_blobstorage_and_demostorage(self):
         import os
@@ -188,8 +197,11 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
             '&blobstorage_layout=bushy' % (self.tmpdir, q(self.tmpdir)))
         storage = factory()
         self.assertTrue(isinstance(storage, DemoStorage))
-        self.assertTrue(os.path.exists(DB_FILE))
-        self.assertTrue(os.path.exists(BLOB_DIR))
+        try:
+            self.assertTrue(os.path.exists(DB_FILE))
+            self.assertTrue(os.path.exists(BLOB_DIR))
+        finally:
+            storage.close()
 
     def test_dbargs(self):
         resolver = self._makeOne()
