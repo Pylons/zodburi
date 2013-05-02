@@ -25,8 +25,9 @@ class SuffixMultiplier:
         return int(v) * self._default
 
 convert_bytesize = SuffixMultiplier({'kb': 1024,
-                              'mb': 1024*1024,
-                              'gb': 1024*1024*1024L,})
+                                     'mb': 1024*1024,
+                                     'gb': 1024*1024*1024,
+                                    })
 
 
 def convert_int(value):
