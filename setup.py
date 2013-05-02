@@ -19,6 +19,7 @@ except:
 
 requires = ['ZODB3']
 tests_require = requires + ['mock']
+testing_extras = tests_require + ['nose', 'coverage']
 
 setup(name='zodburi',
       version='1.2dev',
@@ -48,4 +49,7 @@ setup(name='zodburi',
       zconfig = zodburi.resolvers:zconfig_resolver
       memory = zodburi.resolvers:mapping_storage_resolver
       """,
+      extras_require = {
+        'testing': testing_extras,
+      },
       )

@@ -4,6 +4,9 @@
 Unreleased
 ----------
 
+- Added ``setup.py dev`` alias (runs ``setup.py develop`` and installs
+  testing dependencies).
+
 - Automated building the Sphinx docs via ``tox``.
 
 - Fixed 'zconfig:' URIs under Python 2.7.  The code worked around a bug in
