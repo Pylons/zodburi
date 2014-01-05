@@ -17,7 +17,7 @@ try:
 except:
     CHANGES = ''
 
-requires = ['ZODB3']
+requires = ['ZODB', 'ZConfig', 'ZEO']
 tests_require = requires + ['mock']
 testing_extras = tests_require + ['nose', 'coverage']
 docs_extras = tests_require + ['Sphinx']
