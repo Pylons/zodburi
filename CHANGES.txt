@@ -1,8 +1,8 @@
 ``zodburi`` Changelog
 =====================
 
-Unreleased
-----------
+2.0 (2014-01-05)
+----------------
 
 - Update ``ZODB3`` meta-package dependency to ``ZODB`` + ``ZConfig`` + ``ZEO``.
   Those releases are what we import, and have final Py3k-compatible releases.
