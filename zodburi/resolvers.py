@@ -98,23 +98,33 @@ class FileStorageURIResolver(Resolver):
         if 'blobstorage_layout' in kw:
             blobstorage_layout = kw.pop('blobstorage_layout')
 
+        def checkDir(path):
+            # try to create directory if not exist
+            dirname = os.path.dirname(path)
+            if not os.path.isdir(dirname):
+                os.makedirs(dirname)
+
         if demostorage and blobstorage_dir:
             def factory():
+                checkDir(path)
                 filestorage = FileStorage(*args, **kw)
                 blobstorage = BlobStorage(blobstorage_dir, filestorage,
                                           layout=blobstorage_layout)
                 return DemoStorage(base=blobstorage)
         elif blobstorage_dir:
             def factory():
+                checkDir(path)
                 filestorage = FileStorage(*args, **kw)
                 return BlobStorage(blobstorage_dir, filestorage,
                                           layout=blobstorage_layout)
         elif demostorage:
             def factory():
+                checkDir(path)
                 filestorage = FileStorage(*args, **kw)
                 return DemoStorage(base=filestorage)
         else:
             def factory():
+                checkDir(path)
                 return FileStorage(*args, **kw)
 
         return factory, unused
