@@ -1,6 +1,11 @@
 ``zodburi`` Changelog
 =====================
 
+Next release
+------------
+
+- Test under Python 3.4 and add Trove classifier.
+
 2.0 (2014-01-05)
 ----------------
 
