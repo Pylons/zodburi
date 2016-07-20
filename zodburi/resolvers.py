@@ -108,7 +108,7 @@ class FileStorageURIResolver(Resolver):
             def factory():
                 filestorage = FileStorage(*args, **kw)
                 return BlobStorage(blobstorage_dir, filestorage,
-                                          layout=blobstorage_layout)
+                                   layout=blobstorage_layout)
         elif demostorage:
             def factory():
                 filestorage = FileStorage(*args, **kw)
@@ -124,10 +124,11 @@ class ClientStorageURIResolver(Resolver):
     _int_args = ('debug', 'min_disconnect_poll', 'max_disconnect_poll',
                  'wait_for_server_on_startup', 'wait', 'wait_timeout',
                  'read_only', 'read_only_fallback', 'shared_blob_dir',
-                 'demostorage')
+                 'demostorage', 'drop_cache_rather_verify',
+                 'blob_cache_size_check')
     _string_args = ('storage', 'name', 'client', 'var', 'username',
-                    'password', 'realm', 'blob_dir')
-    _bytesize_args = ('cache_size', )
+                    'password', 'realm', 'blob_dir', 'client_label')
+    _bytesize_args = ('cache_size', 'blob_cache_size')
 
     def __call__(self, uri):
         # urlsplit doesnt understand zeo URLs so force to something that
