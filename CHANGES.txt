@@ -4,6 +4,8 @@
 Next release
 ------------
 
+- Add missing ClientStorage constructor kw args to resolver.
+
 - Test under Python 3.4 and add Trove classifier.
 
 2.0 (2014-01-05)
@@ -11,6 +13,8 @@ Next release
 
 - Update ``ZODB3`` meta-package dependency to ``ZODB`` + ``ZConfig`` + ``ZEO``.
   Those releases are what we import, and have final Py3k-compatible releases.
+
+- Packaging:  fix missing ``url`` argument to ``setup()``.
 
 2.0b1 (2013-05-02)
 ------------------
