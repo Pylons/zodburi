@@ -268,11 +268,64 @@ class TestClientStorageURIResolver(unittest.TestCase):
         ClientStorage.assert_called_once_with('/var/nosuchfile', wait=0)
 
     @mock.patch('zodburi.resolvers.ClientStorage')
+    def test_factory_kwargs(self, ClientStorage):
+        resolver = self._makeOne()
+        factory, dbkw = resolver('zeo:///var/nosuchfile?'
+                                 'storage=main&'
+                                 'cache_size=1kb&'
+                                 'name=foo&'
+                                 'client=bar&'
+                                 'var=baz&'
+                                 'min_disconnect_poll=2&'
+                                 'max_disconnect_poll=3&'
+                                 'wait_for_server_on_startup=true&'
+                                 'wait=4&'
+                                 'wait_timeout=5&'
+                                 'read_only=6&'
+                                 'read_only_fallback=7&'
+                                 'drop_cache_rather_verify=true&'
+                                 'username=monty&'
+                                 'password=python&'
+                                 'realm=blat&'
+                                 'blob_dir=some/dir&'
+                                 'shared_blob_dir=true&'
+                                 'blob_cache_size=1kb&'
+                                 'blob_cache_size_check=8&'
+                                 'client_label=fink&'
+                                 )
+        storage = factory()
+        storage.close()
+        ClientStorage.assert_called_once_with('/var/nosuchfile',
+                                              storage='main',
+                                              cache_size=1024,
+                                              name='foo',
+                                              client='bar',
+                                              var='baz',
+                                              min_disconnect_poll=2,
+                                              max_disconnect_poll=3,
+                                              wait_for_server_on_startup=1,
+                                              wait=4,
+                                              wait_timeout=5,
+                                              read_only=6,
+                                              read_only_fallback=7,
+                                              drop_cache_rather_verify=1,
+                                              username='monty',
+                                              password='python',
+                                              realm='blat',
+                                              blob_dir='some/dir',
+                                              shared_blob_dir=1,
+                                              blob_cache_size=1024,
+                                              blob_cache_size_check=8,
+                                              client_label='fink',
+                                              )
+
+
+    @mock.patch('zodburi.resolvers.ClientStorage')
     def test_invoke_factory_demostorage(self, ClientStorage):
         from ZODB.DemoStorage import DemoStorage
         resolver = self._makeOne()
         factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false'
-                                        '&demostorage=true')
+                                 '&demostorage=true')
         storage = factory()
         storage.close()
         self.assertTrue(isinstance(storage, DemoStorage))
@@ -280,9 +333,9 @@ class TestClientStorageURIResolver(unittest.TestCase):
     def test_dbargs(self):
         resolver = self._makeOne()
         factory, dbkw = resolver('zeo://localhost:8080?debug=true&'
-                                        'connection_pool_size=1&'
-                                        'connection_cache_size=1&'
-                                        'database_name=dbname')
+                                 'connection_pool_size=1&'
+                                 'connection_cache_size=1&'
+                                 'database_name=dbname')
         self.assertEqual(dbkw, {'connection_pool_size': '1',
                                 'connection_cache_size': '1',
                                 'database_name': 'dbname'})

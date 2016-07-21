@@ -159,6 +159,8 @@ min_disconnect_poll
   integer
 max_disconnect_poll
   integer
+wait_for_server_on_startup (deprecated alias for wait)
+  boolean
 wait
   boolean
 wait_timeout
@@ -166,6 +168,8 @@ wait_timeout
 read_only
   boolean
 read_only_fallback
+  boolean
+drop_cache_rather_verify
   boolean
 username
   string
@@ -177,6 +181,12 @@ blob_dir
   string
 shared_blob_dir
   boolean
+blob_cache_size
+  bytesize
+blob_cache_size_check
+  integer
+client_label
+  string
 
 Misc
 ++++
