@@ -18,6 +18,7 @@
 #sys.path.append(os.path.abspath('some/directory'))
 
 import sys, os
+import pylons_sphinx_themes
 
 # General configuration
 # ---------------------
@@ -81,33 +82,17 @@ today_fmt = '%B %d, %Y'
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
-# Add and use Pylons theme
-if 'sphinx-build' in ' '.join(sys.argv):  # protect against dumb importers
-    from subprocess import call, Popen, PIPE
-
-    p = Popen('which git', shell=True, stdout=PIPE)
-    wd = os.getcwd()
-    parent = os.path.dirname(os.path.dirname(__file__))
-    sys.path.append(os.path.abspath(parent))
-    sys.path.append(os.path.abspath('_themes'))
-    os.chdir(parent)
-    git = p.stdout.read().strip()
-    call([git, 'submodule', 'update', '--init', 'docs/_themes'])
-    os.system('%s setup.py test -q' % sys.executable)
-    os.chdir(wd)
-
-    for item in os.listdir(parent):
-        if item.endswith('.egg'):
-            sys.path.append(os.path.join(parent, item))
-
 # Options for HTML output
 # -----------------------
 
 # Add and use Pylons theme
 sys.path.append(os.path.abspath('_themes'))
-html_theme_path = ['_themes']
+html_theme_path = pylons_sphinx_themes.get_html_themes_path()
 html_theme = 'pylons'
-html_theme_options = dict(github_url='http://github.com/Pylons/zodburi')
+html_theme_options = dict(
+    github_url='http://github.com/Pylons/zodburi',
+    canonical_url='http://docs.pylonsproject.org/projects/zodburi/en/latest/',
+)
 
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
