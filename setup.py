@@ -20,7 +20,11 @@ except:
 requires = ['ZODB', 'ZConfig', 'ZEO']
 tests_require = requires + ['mock']
 testing_extras = tests_require + ['nose', 'coverage']
-docs_extras = tests_require + ['Sphinx']
+docs_extras = tests_require + [
+    'Sphinx >= 1.3.1',
+    'repoze.sphinx.autointerface',
+    'pylons-sphinx-themes',
+]
 
 setup(name='zodburi',
       version='2.0',
