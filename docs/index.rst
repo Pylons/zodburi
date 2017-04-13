@@ -94,8 +94,74 @@ These arguments relate to connections created from the database.
 
 connection_cache_size
   integer (default 10000)
+
+  Target size, in number of objects, of each connection's object
+  cache.
+
+connection_cache_size_bytes
+  integer (default 0)
+
+  Target size, in total estimated size for objects, of each
+  connection's object cache.  0 means no limit.
+
+  A suffix of KB, MB, or GB may be used to provide units.
+
+connection_historical_cache_size
+  integer (default 1000)
+
+  Target size, in number of objects, of each historical connection's
+  object cache.
+
+connection_historical_cache_size_bytes
+  integer (default 0)
+
+  Target size, in total estimated size of objects, of each historical
+  connection's object cache.
+
+  A suffix of KB, MB, or GB may be used to provide units.
+
+connection_historical_pool_size
+  integer (default 3)
+
+  The expected maximum total number of historical connections
+  simultaneously open.
+
+connection_historical_timeout
+  integer (default 300)
+
+  Maximum age of inactive historical connections When a historical
+  connection has remained unused in a historical connection pool for
+  more than connection_historical_timeout seconds, it will be
+  discarded and it's resources released.
+
+connection_large_record_size
+  integer (default 16MB)
+
+  When object records are saved that are larger than this, a warning
+  is issued, suggesting that blobs should be used instead.
+
+  A suffix of KB, MB, or GB may be used to provide units.
+
 connection_pool_size
   integer (default 7)
+
+  The expected maximum number of simultaneously open connections.
+  There is no hard limit (as many connections as are requested
+  will be opened, until system resources are exhausted).  Exceeding
+  pool-size connections causes a warning message to be logged,
+  and exceeding twice pool-size connections causes a critical
+  message to be logged.
+
+connection_pool_timeout
+  integer (default unlimited)
+
+  Maximum age of inactive (non-historical) connections When a
+  connection has remained unused in a connection pool for more than
+  connection_pool_timeout seconds, it will be discarded and it's
+  resources released.
+
+  The minimum interval that an unused (non-historical)
+  connection should be kept.
 
 Blob-related
 ++++++++++++
