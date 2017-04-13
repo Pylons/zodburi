@@ -461,7 +461,7 @@ class TestZConfigURIResolver(unittest.TestCase):
                           'database_name': 'foo'})
 
     def test_database_all_options(self):
-        from zodburi import connection_parameters
+        from zodburi import connection_parameters, bytes_parameters
         self.tmp.write(("""
         <zodb x>
           <mappingstorage>
@@ -471,7 +471,7 @@ class TestZConfigURIResolver(unittest.TestCase):
         </zodb>
         """ % '\n'.join("%s %s" % (
                             name.replace('_', '-'),
-                            '%sMB' % i if name.endswith('_bytes') else i,
+                            '%sMB' % i if name in bytes_parameters else i,
                            )
                         for (i, name)
                         in enumerate(connection_parameters)
@@ -484,10 +484,10 @@ class TestZConfigURIResolver(unittest.TestCase):
         self.assertTrue(isinstance(storage, MappingStorage))
         expect = dict(database_name='foo')
         for i, parameter in enumerate(connection_parameters):
-            parameter = 'connection_' + parameter
-            expect[parameter] = i
-            if parameter.endswith('_bytes'):
-                expect[parameter] *= 1<<20
+            cparameter = 'connection_' + parameter
+            expect[cparameter] = i
+            if parameter in bytes_parameters:
+                expect[cparameter] *= 1<<20
         self.assertEqual(dbkw, expect)
 
 class TestMappingStorageURIResolver(Base, unittest.TestCase):

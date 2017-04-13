@@ -23,6 +23,9 @@ connection_parameters = '''
   historical_timeout large_record_size
   '''.strip().split()
 
+bytes_parameters = (
+    'cache_size_bytes', 'historical_cache_size_bytes', 'large_record_size')
+
 parameters = dict(database_name = 'database_name')
 for parameter in connection_parameters:
     parameters['connection_' + parameter] = parameter
@@ -47,7 +50,7 @@ def _get_dbkw(kw):
         if parameter in kw:
             v = kw.pop(parameter)
             if parameter.startswith('connection_'):
-                if parameter.endswith('_bytes'):
+                if parameters[parameter] in bytes_parameters:
                     v = _parse_bytes(v)
                 else:
                     v = int(v)
