@@ -93,49 +93,42 @@ Connection-related
 These arguments relate to connections created from the database.
 
 connection_cache_size
-  integer (default 10000)
-
-  Target size, in number of objects, of each connection's object
-  cache.
+  integer (default 10000) target size, in number of objects, of each
+  connection's object cache
 
 connection_cache_size_bytes
-  integer (default 0)
+  integer (default 0) target estimated size, in bytes, of each
+  connection's object cache
 
-  Target size, in total estimated size for objects, of each
-  connection's object cache.  0 means no limit.
+  0 means no limit.
 
   A suffix of KB, MB, or GB may be used to provide units.
 
 connection_historical_cache_size
-  integer (default 1000)
-
-  Target size, in number of objects, of each historical connection's
-  object cache.
+  integer (default 1000) target size, in number of objects, of each
+  historical connection's object cache
 
 connection_historical_cache_size_bytes
-  integer (default 0)
+  integer (default 0) target estimated size, in bytes, of each
+  historical connection's object cache
 
-  Target size, in total estimated size of objects, of each historical
-  connection's object cache.
+  0 means no limit.
 
   A suffix of KB, MB, or GB may be used to provide units.
 
 connection_historical_pool_size
-  integer (default 3)
-
-  The expected maximum total number of historical connections
-  simultaneously open.
+  integer (default 3) expected maximum total number of historical connections
+  simultaneously open
 
 connection_historical_timeout
-  integer (default 300)
+  integer (default 300) maximum age of inactive historical connections
 
-  Maximum age of inactive historical connections When a historical
-  connection has remained unused in a historical connection pool for
-  more than connection_historical_timeout seconds, it will be
-  discarded and it's resources released.
+  When a historical connection has remained unused in a historical
+  connection pool for more than connection_historical_timeout seconds,
+  it will be discarded and its resources released.
 
 connection_large_record_size
-  integer (default 16MB)
+  integer (default 16MB) record size limit before suggesting using blobs
 
   When object records are saved that are larger than this, a warning
   is issued, suggesting that blobs should be used instead.
@@ -143,9 +136,9 @@ connection_large_record_size
   A suffix of KB, MB, or GB may be used to provide units.
 
 connection_pool_size
-  integer (default 7)
+  integer (default 7) expected maximum number of simultaneously open
+  connections
 
-  The expected maximum number of simultaneously open connections.
   There is no hard limit (as many connections as are requested
   will be opened, until system resources are exhausted).  Exceeding
   pool-size connections causes a warning message to be logged,
@@ -153,15 +146,12 @@ connection_pool_size
   message to be logged.
 
 connection_pool_timeout
-  integer (default unlimited)
+  integer (default unlimited) maximum age of inactive (non-historical)
+  connections
 
-  Maximum age of inactive (non-historical) connections When a
-  connection has remained unused in a connection pool for more than
-  connection_pool_timeout seconds, it will be discarded and it's
+  When a connection has remained unused in a connection pool for more
+  than connection_pool_timeout seconds, it will be discarded and its
   resources released.
-
-  The minimum interval that an unused (non-historical)
-  connection should be kept.
 
 Blob-related
 ++++++++++++
