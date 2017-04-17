@@ -4,6 +4,11 @@
 2.1 (unreleased)
 ----------------
 
+- Add support for additional database configuration parameters:
+  pool_timeout, cache_size_bytes, historical_pool_size,
+  historical_cache_size, historical_cache_size_bytes,
+  historical_timeout, and large_record_size
+
 - Add support for Python 3.5.
 
 - Drop support for Python 2.6 and 3.2.

@@ -194,10 +194,10 @@ class ZConfigURIResolver(object):
         if isinstance(config_item, ZODBDatabase):
             config = config_item.config
             factory = config.storage
-            dbkw = {
-                'connection_cache_size': config.cache_size,
-                'connection_pool_size': config.pool_size,
-            }
+            from zodburi import connection_parameters
+            dbkw = {'connection_' + name: getattr(config, name)
+                    for name in connection_parameters
+                    if getattr(config, name) is not None}
             if config.database_name:
                 dbkw['database_name'] = config.database_name
         else:

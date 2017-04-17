@@ -423,9 +423,15 @@ class TestZConfigURIResolver(unittest.TestCase):
         storage = factory()
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
-        self.assertEqual(dbkw, {
-            'connection_cache_size': 5000,
-            'connection_pool_size': 7})
+        self.assertEqual(dbkw,
+                         {'connection_cache_size': 5000,
+                          'connection_cache_size_bytes': 0,
+                          'connection_historical_cache_size': 1000,
+                          'connection_historical_cache_size_bytes': 0,
+                          'connection_historical_pool_size': 3,
+                          'connection_historical_timeout': 300,
+                          'connection_large_record_size': 16777216,
+                          'connection_pool_size': 7})
 
     def test_named_database(self):
         self.tmp.write(b"""
@@ -443,10 +449,46 @@ class TestZConfigURIResolver(unittest.TestCase):
         storage = factory()
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
-        self.assertEqual(dbkw, {
-            'connection_cache_size': 20000,
-            'connection_pool_size': 5,
-            'database_name': 'foo'})
+        self.assertEqual(dbkw,
+                         {'connection_cache_size': 20000,
+                          'connection_cache_size_bytes': 0,
+                          'connection_historical_cache_size': 1000,
+                          'connection_historical_cache_size_bytes': 0,
+                          'connection_historical_pool_size': 3,
+                          'connection_historical_timeout': 300,
+                          'connection_large_record_size': 16777216,
+                          'connection_pool_size': 5,
+                          'database_name': 'foo'})
+
+    def test_database_all_options(self):
+        from zodburi import connection_parameters, bytes_parameters
+        self.tmp.write(("""
+        <zodb x>
+          <mappingstorage>
+          </mappingstorage>
+          database-name foo
+          %s
+        </zodb>
+        """ % '\n'.join("%s %s" % (
+                            name.replace('_', '-'),
+                            '%sMB' % i if name in bytes_parameters else i,
+                           )
+                        for (i, name)
+                        in enumerate(connection_parameters)
+                        )).encode())
+        self.tmp.flush()
+        resolver = self._makeOne()
+        factory, dbkw = resolver('zconfig://%s#x' % self.tmp.name)
+        storage = factory()
+        from ZODB.MappingStorage import MappingStorage
+        self.assertTrue(isinstance(storage, MappingStorage))
+        expect = dict(database_name='foo')
+        for i, parameter in enumerate(connection_parameters):
+            cparameter = 'connection_' + parameter
+            expect[cparameter] = i
+            if parameter in bytes_parameters:
+                expect[cparameter] *= 1<<20
+        self.assertEqual(dbkw, expect)
 
 class TestMappingStorageURIResolver(Base, unittest.TestCase):
 
