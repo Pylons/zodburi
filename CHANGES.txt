@@ -1,7 +1,7 @@
 ``zodburi`` Changelog
 =====================
 
-2.2 (unreleased)
+2.2 (2017-04-17)
 ----------------
 
 - Add support for additional database configuration parameters:
