@@ -1,7 +1,7 @@
 ``zodburi`` Changelog
 =====================
 
-2.2.1 (unreleased)
+2.2.1 (2017-04-18)
 ------------------
 
 - Fixed: changes in 2.2 broke the zconfig resolver.
