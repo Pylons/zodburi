@@ -50,10 +50,11 @@ def _get_dbkw(kw):
         if parameter in kw:
             v = kw.pop(parameter)
             if parameter.startswith('connection_'):
-                if parameters[parameter] in bytes_parameters:
-                    v = _parse_bytes(v)
-                else:
-                    v = int(v)
+                if not isinstance(v, int):
+                    if parameters[parameter] in bytes_parameters:
+                        v = _parse_bytes(v)
+                    else:
+                        v = int(v)
             dbkw[parameters[parameter]] = v
 
     if kw:

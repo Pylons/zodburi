@@ -490,6 +490,31 @@ class TestZConfigURIResolver(unittest.TestCase):
                 expect[cparameter] *= 1<<20
         self.assertEqual(dbkw, expect)
 
+    def test_database_integration_because_ints(self):
+        from zodburi import resolve_uri
+        self.tmp.write(b"""
+        <zodb>
+          <mappingstorage>
+          </mappingstorage>
+        </zodb>
+        """)
+        self.tmp.flush()
+        from zodburi import resolve_uri
+        factory, dbkw = resolve_uri('zconfig://%s' % self.tmp.name)
+        storage = factory()
+        from ZODB.MappingStorage import MappingStorage
+        self.assertTrue(isinstance(storage, MappingStorage))
+        self.assertEqual(dbkw,
+                         {'cache_size': 5000,
+                          'cache_size_bytes': 0,
+                          'historical_cache_size': 1000,
+                          'historical_cache_size_bytes': 0,
+                          'historical_pool_size': 3,
+                          'historical_timeout': 300,
+                          'large_record_size': 16777216,
+                          'pool_size': 7,
+                          'database_name': 'unnamed'})
+
 class TestMappingStorageURIResolver(Base, unittest.TestCase):
 
     def _getTargetClass(self):
