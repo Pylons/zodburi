@@ -49,8 +49,8 @@ setup(name='zodburi',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      tests_require = requires,
-      install_requires = tests_require,
+      tests_require = tests_require,
+      install_requires = requires,
       test_suite="zodburi",
       entry_points="""\
       [zodburi.resolvers]
