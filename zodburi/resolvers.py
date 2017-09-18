@@ -134,21 +134,19 @@ class ClientStorageURIResolver(Resolver):
         # urlsplit doesnt understand zeo URLs so force to something that
         # doesn't break
         uri = uri.replace('zeo://', 'http://', 1)
-        (scheme, netloc, path, query, frag) = urlsplit(uri)
-        if netloc:
+        u = urlsplit(uri)
+        if u.netloc:
             # TCP URL
-            if ':' in netloc:
-                host, port = netloc.split(':')
-                port = int(port)
-            else:
-                host = netloc
+            host = u.hostname
+            port = u.port
+            if port is None:
                 port = 9991
             args = ((host, port),)
         else:
             # Unix domain socket URL
-            path = os.path.normpath(path)
+            path = os.path.normpath(u.path)
             args = (path,)
-        kw = dict(parse_qsl(query))
+        kw = dict(parse_qsl(u.query))
         kw, unused = self.interpret_kwargs(kw)
         if 'demostorage' in kw:
             kw.pop('demostorage')
