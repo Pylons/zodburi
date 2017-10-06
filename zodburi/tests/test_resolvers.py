@@ -253,6 +253,20 @@ class TestClientStorageURIResolver(unittest.TestCase):
         ClientStorage.assert_called_once_with(('localhost', 8080), debug=1)
 
     @mock.patch('zodburi.resolvers.ClientStorage')
+    def test_call_ipv6_no_port(self, ClientStorage):
+        resolver = self._makeOne()
+        factory, dbkw = resolver('zeo://[::1]?debug=true')
+        factory()
+        ClientStorage.assert_called_once_with(('::1', 9991), debug=1)
+
+    @mock.patch('zodburi.resolvers.ClientStorage')
+    def test_call_ipv6(self, ClientStorage):
+        resolver = self._makeOne()
+        factory, dbkw = resolver('zeo://[::1]:9090?debug=true')
+        factory()
+        ClientStorage.assert_called_once_with(('::1', 9090), debug=1)
+
+    @mock.patch('zodburi.resolvers.ClientStorage')
     def test_call_unix(self, ClientStorage):
         resolver = self._makeOne()
         factory, dbkw = resolver('zeo:///var/sock?debug=true')
