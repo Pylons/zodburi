@@ -27,7 +27,7 @@ docs_extras = tests_require + [
 ]
 
 setup(name='zodburi',
-      version='2.2.3.dev0',
+      version='2.3.0.dev0',
       description=('Construct ZODB storage instances from URIs.'),
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
@@ -36,8 +36,8 @@ setup(name='zodburi',
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.5",
         "License :: Repoze Public License",
         ],
