@@ -8,6 +8,8 @@
 
 - Add support for Python 3.6.
 
+- Fix parsing of ``zeo://`` URI with IPv6 address.
+
 2.2.2 (2017-05-05)
 ------------------
 
