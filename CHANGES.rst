@@ -1,14 +1,14 @@
-``zodburi`` Changelog
-=====================
+Changelog
+=========
 
 2.3.0 (unreleased)
 ------------------
 
+- Fix parsing of ``zeo://`` URI with IPv6 address.
+
 - Drop support for Python 3.3.
 
 - Add support for Python 3.6.
-
-- Fix parsing of ``zeo://`` URI with IPv6 address.
 
 2.2.2 (2017-05-05)
 ------------------
@@ -16,31 +16,27 @@
 - Fix transposed ``install_requires`` and ``tests_require`` lists in
   ``setup.py``.
 
-
 2.2.1 (2017-04-18)
 ------------------
 
-- Fixed: changes in 2.2 broke the zconfig resolver.
-
+- Fix breakage added in 2.2 to the ``zconfig`` resolver.
 
 2.2 (2017-04-17)
 ----------------
 
 - Add support for additional database configuration parameters:
-  pool_timeout, cache_size_bytes, historical_pool_size,
-  historical_cache_size, historical_cache_size_bytes,
-  historical_timeout, and large_record_size
+  ``pool_timeout``, ``cache_size_bytes``, ``historical_pool_size``,
+  ``historical_cache_size``, ``historical_cache_size_bytes``,
+  ``historical_timeout``, and ``large_record_size``.
 
 2.1 (2017-04-17)
 ----------------
 
-- Add support for Python 3.5.
+- Add support for Python 3.4 and 3.5.
 
 - Drop support for Python 2.6 and 3.2.
 
 - Add missing ClientStorage constructor kw args to resolver.
-
-- Test under Python 3.4 and add Trove classifier.
 
 2.0 (2014-01-05)
 ----------------
@@ -53,39 +49,38 @@
 2.0b1 (2013-05-02)
 ------------------
 
-- Added support for Python 3.2 / 3.3.
+- Add support for Python 3.2 / 3.3.
 
-- Added ``setup.py docs`` alias (runs ``setup.py develop`` and installs
+- Add ``setup.py docs`` alias (runs ``setup.py develop`` and installs
   documentation dependencies).
 
-- Added ``setup.py dev`` alias (runs ``setup.py develop`` and installs
+- Add ``setup.py dev`` alias (runs ``setup.py develop`` and installs
   testing dependencies).
 
-- Automated building the Sphinx docs via ``tox``.
+- Automate building the Sphinx docs via ``tox``.
 
-- Fixed 'zconfig:' URIs under Python 2.7.  The code worked around a bug in
-  the stdlib's 'urlparse.urlsplit' for Python < 2.7; that workaround broke
+- Fix ``zconfig:`` URIs under Python 2.7.  The code worked around a bug in
+  the stdlib's ``urlparse.urlsplit`` for Python < 2.7; that workaround broke
   under 2.7.  See https://github.com/Pylons/zodburi/issues/5
 
-- Dropped support for Python 2.5.
+- Drop support for Python 2.5.
 
 1.1 (2012-09-12)
 ----------------
 
-- Removed support for ``postgres://`` URIs, which will now be provided by
-  the ``relstorage`` package.  Thanks to Georges Dubus for
-  the patch!
+- Remove support for ``postgres://`` URIs, which will now be provided by
+  the ``relstorage`` package.  Thanks to Georges Dubus for the patch!
 
 1.0 (2012-06-07)
 ----------------
 
-- Added support for ``postgres://`` URIs.  Thanks to Georges Dubus for
+- Add support for ``postgres://`` URIs.  Thanks to Georges Dubus for
   the patch!
 
-- Pinned dependencies to Python 2.5-compatible versions when testing with
+- Pin dependencies to Python 2.5-compatible versions when testing with
   tox under Python 2.5.
 
-- Updated the documentation for publication to `ReadTheDocs
+- Update the documentation for publication to `ReadTheDocs
   <http://docs.pylonsproject.org/projects/zodburi/dev/>`_
 
 1.0b1 (2011-08-21)
