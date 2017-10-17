@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.3.0 (unreleased)
+2.3.0 (2017-10-17)
 ------------------
 
 - Fix parsing of ``zeo://`` URI with IPv6 address.
