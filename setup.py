@@ -8,13 +8,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 try:
     with open(os.path.join(here, 'README.rst')) as f:
         README = f.read()
-except:
+except IOError:
     README = ''
 
 try:
-    with open(os.path.join(here, 'CHANGES.txt')) as f:
+    with open(os.path.join(here, 'CHANGES.rst')) as f:
         CHANGES = f.read()
-except:
+except IOError:
     CHANGES = ''
 
 requires = ['ZODB', 'ZConfig', 'ZEO']
@@ -38,7 +38,7 @@ setup(name='zodburi',
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
         "License :: Repoze Public License",
         ],
       keywords='zodb zodbconn',
