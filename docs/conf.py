@@ -90,8 +90,8 @@ sys.path.append(os.path.abspath('_themes'))
 html_theme_path = pylons_sphinx_themes.get_html_themes_path()
 html_theme = 'pylons'
 html_theme_options = dict(
-    github_url='http://github.com/Pylons/zodburi',
-    canonical_url='http://docs.pylonsproject.org/projects/zodburi/en/latest/',
+    github_url='https://github.com/Pylons/zodburi',
+    canonical_url='https://docs.pylonsproject.org/projects/zodburi/en/latest/',
 )
 
 # The style sheet to use for HTML and HTML Help pages. A file of that name
