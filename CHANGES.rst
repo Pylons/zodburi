@@ -86,7 +86,7 @@ Changelog
   tox under Python 2.5.
 
 - Update the documentation for publication to `ReadTheDocs
-  <http://docs.pylonsproject.org/projects/zodburi/dev/>`_
+  <https://docs.pylonsproject.org/projects/zodburi/en/latest/>`_
 
 1.0b1 (2011-08-21)
 ------------------
