@@ -373,6 +373,10 @@ tagged versions.
 
 Visit https://github.com/Pylons/zodburi/issues to report bugs.
 
+
+.. include:: ../CHANGES.rst
+
+
 Indices and tables
 ------------------
 

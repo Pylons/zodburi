@@ -1,13 +1,15 @@
-Changelog
-=========
+.. _change-log:
+
+Change Log
+----------
 
 2.3.1 (unreleased)
-------------------
+~~~~~~~~~~~~~~~~~~
 
 - TBD
 
 2.3.0 (2017-10-17)
-------------------
+~~~~~~~~~~~~~~~~~~
 
 - Fix parsing of ``zeo://`` URI with IPv6 address.
 
@@ -16,18 +18,18 @@ Changelog
 - Add support for Python 3.6.
 
 2.2.2 (2017-05-05)
-------------------
+~~~~~~~~~~~~~~~~~~
 
 - Fix transposed ``install_requires`` and ``tests_require`` lists in
   ``setup.py``.
 
 2.2.1 (2017-04-18)
-------------------
+~~~~~~~~~~~~~~~~~~
 
 - Fix breakage added in 2.2 to the ``zconfig`` resolver.
 
 2.2 (2017-04-17)
-----------------
+~~~~~~~~~~~~~~~~
 
 - Add support for additional database configuration parameters:
   ``pool_timeout``, ``cache_size_bytes``, ``historical_pool_size``,
@@ -35,7 +37,7 @@ Changelog
   ``historical_timeout``, and ``large_record_size``.
 
 2.1 (2017-04-17)
-----------------
+~~~~~~~~~~~~~~~~
 
 - Add support for Python 3.4 and 3.5.
 
@@ -44,7 +46,7 @@ Changelog
 - Add missing ClientStorage constructor kw args to resolver.
 
 2.0 (2014-01-05)
-----------------
+~~~~~~~~~~~~~~~~
 
 - Update ``ZODB3`` meta-package dependency to ``ZODB`` + ``ZConfig`` + ``ZEO``.
   Those releases are what we import, and have final Py3k-compatible releases.
@@ -52,7 +54,7 @@ Changelog
 - Packaging:  fix missing ``url`` argument to ``setup()``.
 
 2.0b1 (2013-05-02)
-------------------
+~~~~~~~~~~~~~~~~~~
 
 - Add support for Python 3.2 / 3.3.
 
@@ -71,13 +73,13 @@ Changelog
 - Drop support for Python 2.5.
 
 1.1 (2012-09-12)
-----------------
+~~~~~~~~~~~~~~~~
 
 - Remove support for ``postgres://`` URIs, which will now be provided by
   the ``relstorage`` package.  Thanks to Georges Dubus for the patch!
 
 1.0 (2012-06-07)
-----------------
+~~~~~~~~~~~~~~~~
 
 - Add support for ``postgres://`` URIs.  Thanks to Georges Dubus for
   the patch!
@@ -89,6 +91,6 @@ Changelog
   <https://docs.pylonsproject.org/projects/zodburi/en/latest/>`_
 
 1.0b1 (2011-08-21)
-------------------
+~~~~~~~~~~~~~~~~~~
 
 - Initial release.
