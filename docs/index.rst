@@ -50,7 +50,7 @@ are ``file://``, ``zeo://``, ``zconfig://``, ``memory://``
 In addition to those schemes, the relstorage_ package adds support for
 ``postgres://``.
 
-.. _relstorage : http://pypi.python.org/pypi/RelStorage
+.. _relstorage : https://pypi.org/project/RelStorage/
 
 ``file://`` URI scheme
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -368,10 +368,10 @@ More Information
 Reporting Bugs / Development Versions
 -------------------------------------
 
-Visit http://github.com/Pylons/zodburi to download development or
+Visit https://github.com/Pylons/zodburi to download development or
 tagged versions.
 
-Visit http://github.com/Pylons/zodburi/issues to report bugs.
+Visit https://github.com/Pylons/zodburi/issues to report bugs.
 
 Indices and tables
 ------------------
