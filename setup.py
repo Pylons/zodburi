@@ -21,9 +21,9 @@ requires = ['ZODB', 'ZConfig', 'ZEO']
 tests_require = requires + ['mock']
 testing_extras = tests_require + ['nose', 'coverage']
 docs_extras = tests_require + [
-    'Sphinx >= 1.3.1',
+    'Sphinx >= 1.8.1',
     'repoze.sphinx.autointerface',
-    'pylons-sphinx-themes',
+    'pylons-sphinx-themes >= 1.0.10',
 ]
 
 setup(name='zodburi',
