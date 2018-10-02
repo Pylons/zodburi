@@ -17,11 +17,14 @@
 # make it absolute, like shown here.
 #sys.path.append(os.path.abspath('some/directory'))
 
-import sys, os
+import datetime
+import pkg_resources
 import pylons_sphinx_themes
 
 # General configuration
 # ---------------------
+thisyear = datetime.datetime.now().year
+copyright = '2011-%s, Agendaless Consulting <chrism@plope.com>' % thisyear
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -41,13 +44,12 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'zodburi'
-copyright = '2011, Agendaless Consulting <chrism@plope.com>'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.0'
+version = pkg_resources.get_distribution('zodburi').version
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -86,7 +88,6 @@ pygments_style = 'sphinx'
 # -----------------------
 
 # Add and use Pylons theme
-sys.path.append(os.path.abspath('_themes'))
 html_theme_path = pylons_sphinx_themes.get_html_themes_path()
 html_theme = 'pylons'
 html_theme_options = dict(
