@@ -17,11 +17,14 @@
 # make it absolute, like shown here.
 #sys.path.append(os.path.abspath('some/directory'))
 
-import sys, os
+import datetime
+import pkg_resources
 import pylons_sphinx_themes
 
 # General configuration
 # ---------------------
+thisyear = datetime.datetime.now().year
+copyright = '2011-%s, Agendaless Consulting <chrism@plope.com>' % thisyear
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -41,13 +44,12 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'zodburi'
-copyright = '2011, Agendaless Consulting <chrism@plope.com>'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.0'
+version = pkg_resources.get_distribution('zodburi').version
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -86,12 +88,11 @@ pygments_style = 'sphinx'
 # -----------------------
 
 # Add and use Pylons theme
-sys.path.append(os.path.abspath('_themes'))
 html_theme_path = pylons_sphinx_themes.get_html_themes_path()
 html_theme = 'pylons'
 html_theme_options = dict(
-    github_url='http://github.com/Pylons/zodburi',
-    canonical_url='http://docs.pylonsproject.org/projects/zodburi/en/latest/',
+    github_url='https://github.com/Pylons/zodburi',
+    canonical_url='https://docs.pylonsproject.org/projects/zodburi/en/latest/',
 )
 
 # The style sheet to use for HTML and HTML Help pages. A file of that name
@@ -126,12 +127,19 @@ html_theme_options = dict(
 # bottom, using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
 
-# If true, SmartyPants will be used to convert quotes and dashes to
-# typographically correct entities.
-#html_use_smartypants = True
+# Do not use smart quotes.
+smartquotes = False
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
+# Control display of sidebars and include ethical ads from RTD
+html_sidebars = {'**': [
+    'localtoc.html',
+    'ethicalads.html',
+    'relations.html',
+    'sourcelink.html',
+    'searchbox.html',
+]}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

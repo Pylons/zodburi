@@ -21,9 +21,9 @@ requires = ['ZODB', 'ZConfig', 'ZEO']
 tests_require = requires + ['mock']
 testing_extras = tests_require + ['nose', 'coverage']
 docs_extras = tests_require + [
-    'Sphinx >= 1.3.1',
+    'Sphinx >= 1.8.1',
     'repoze.sphinx.autointerface',
-    'pylons-sphinx-themes',
+    'pylons-sphinx-themes >= 1.0.10',
 ]
 
 setup(name='zodburi',
@@ -39,12 +39,13 @@ setup(name='zodburi',
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: Repoze Public License",
         ],
       keywords='zodb zodbconn',
       author="Chris Rossi",
       author_email="pylons-discuss@googlegroups.com",
-      url="http://pylonsproject.org",
+      url="https://pylonsproject.org/",
       license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
       packages=find_packages(),
       include_package_data=True,
