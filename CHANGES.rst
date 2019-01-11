@@ -3,10 +3,12 @@
 Change Log
 ----------
 
-2.3.1 (unreleased)
+2.4.0 (unreleased)
 ~~~~~~~~~~~~~~~~~~
 
-- TBD
+- Add support for Python 3.7.
+
+- Fix PendingDeprecationWarning about ``cgi.parse_qsl``. (PR #21)
 
 2.3.0 (2017-10-17)
 ~~~~~~~~~~~~~~~~~~
