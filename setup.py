@@ -27,7 +27,7 @@ docs_extras = tests_require + [
 ]
 
 setup(name='zodburi',
-      version='2.4.0',
+      version='2.4.1.dev0',
       description=('Construct ZODB storage instances from URIs.'),
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
