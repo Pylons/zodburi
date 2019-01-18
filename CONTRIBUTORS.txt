@@ -103,3 +103,4 @@ Contributors
 - Todd Koym, 2016/07/21
 - Jim Fulton, 2017/04/13
 - Kirill Smelkov, 2017/10/17
+- Éloi Rivard, 2019/01/18
