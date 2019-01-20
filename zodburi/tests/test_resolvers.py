@@ -599,6 +599,14 @@ class TestMappingStorageURIResolver(Base, unittest.TestCase):
         self.assertTrue(isinstance(storage, MappingStorage))
         self.assertEqual(storage.__name__, 'storagename')
 
+    def test_invoke_factory_demostorage(self):
+        from ZODB.DemoStorage import DemoStorage
+        resolver = self._makeOne()
+        factory, dbkw = resolver('memory://storagename?demostorage=true')
+        storage = factory()
+        storage.close()
+        self.assertTrue(isinstance(storage, DemoStorage))
+
 
 class TestEntryPoints(unittest.TestCase):
 

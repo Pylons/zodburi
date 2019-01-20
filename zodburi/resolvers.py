@@ -49,6 +49,7 @@ class Resolver(object):
 
 
 class MappingStorageURIResolver(Resolver):
+    _int_args = ('demostorage',)
 
     def __call__(self, uri):
         prefix, rest = uri.split('memory://', 1)
@@ -61,8 +62,14 @@ class MappingStorageURIResolver(Resolver):
         kw = dict(parse_qsl(query))
         kw, unused = self.interpret_kwargs(kw)
         args = (name,)
-        def factory():
-            return MappingStorage(*args)
+
+        if 'demostorage' in kw:
+            kw.pop('demostorage')
+            def factory():
+                return DemoStorage(base=MappingStorage(*args))
+        else:
+            def factory():
+                return MappingStorage(*args)
         return factory, unused
 
 
