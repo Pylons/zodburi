@@ -20,6 +20,14 @@ matrix:
           env: TOXENV=py36-zodb4
         - python: 3.6
           env: TOXENV=py36-zodb5
+        - python: pypy
+          env: TOXENV=pypy-zodb4
+        - python: pypy
+          env: TOXENV=pypy-zodb5
+        - python: pypy3
+          env: TOXENV=pypy3-zodb4
+        - python: pypy3
+          env: TOXENV=pypy3-zodb5
         - python: 3.7
           env: TOXENV=py37-zodb5
           dist: xenial
