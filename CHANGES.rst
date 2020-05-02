@@ -6,7 +6,9 @@ Change Log
 2.4.1 (unreleased)
 ~~~~~~~~~~~~~~~~~~
 
-- TBD
+- Add support for Python 3.8.
+
+- Drop support for Python 3.4.
 
 2.4.0 (2019-01-11)
 ~~~~~~~~~~~~~~~~~~

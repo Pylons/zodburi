@@ -2,6 +2,7 @@ distribute*.tar.gz
 venv
 *.pyc
 *.egg-info
+.eggs
 .coverage
 *.egg
 .tox/

@@ -7,7 +7,7 @@ Overview
 A library which parses URIs and converts them to ZODB storage objects and
 database arguments.
 
-It will run under CPython 2.6, 2.7, 3.4 to 3.7, pypy and pypy3.  It will not run under Jython.  It requires ZODB >= 3.10.0.
+It will run under CPython 2.7, 3.5 to 3.8, pypy and pypy3.  It will not run under Jython.  It requires ZODB >= 3.10.0.
 
 Installation
 ------------
