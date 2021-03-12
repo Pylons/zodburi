@@ -43,8 +43,8 @@ URI Schemes
 -----------
 
 The URI schemes currently recognized in the ``zodbconn.uri`` setting
-are ``file://``, ``zeo://``, ``zconfig://``, ``memory://``
-.  Documentation for these URI scheme syntaxes are below.
+are ``file://``, ``zeo://``, ``zconfig://``, ``memory://`` and ``demo:``.
+Documentation for these URI scheme syntaxes are below.
 
 In addition to those schemes, the relstorage_ package adds support for
 ``postgres://``.
@@ -355,6 +355,29 @@ Example
 An example that combines a dbname with a query string::
 
    memory://storagename?connection_cache_size=100&database_name=fleeb
+
+
+``demo:`` URI scheme
+~~~~~~~~~~~~~~~~~~~~
+
+The ``demo:`` URI scheme can be passed as ``zodbconn.uri`` to create a
+DemoStorage database factory. DemoStorage provides an overlay combining base
+and δ ("delta", or in other words, "changes") storages.
+The URI scheme contains two parts, base and δ::
+
+    demo:(base_uri)/(δ_uri)
+
+an optional fragment specifies arguments for ``ZODB.DB.DB`` constructor::
+
+    demo:(base_uri)/(δ_uri)#dbkw
+
+Example
++++++++
+
+An example that combines ZEO with local FileStorage for changes::
+
+    demo:(zeo://localhost:9001?storage=abc)/(file:///path/to/Changes.fs)
+
 
 More Information
 ----------------
