@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 from io import BytesIO
 import os
+import re
 
 from ZConfig import loadConfig
 from ZConfig import loadSchemaFile
@@ -15,6 +17,7 @@ from zodburi.datatypes import convert_int
 from zodburi.datatypes import convert_tuple
 from zodburi._compat import parse_qsl
 from zodburi._compat import urlsplit
+from zodburi import _resolve_uri
 
 # Capability test for older Pythons (2.x < 2.7.4, 3.x < 3.2.4)
 (scheme, netloc, path, query, frag) = urlsplit('scheme:///path/#frag')
@@ -205,7 +208,49 @@ class ZConfigURIResolver(object):
         return factory.open, dbkw
 
 
+class DemoStorageURIResolver(object):
+
+    # demo:(base_uri)/(δ_uri)#dbkw...
+    # URI format follows XRI Cross-references to refer to base and δ
+    # (see https://en.wikipedia.org/wiki/Extensible_Resource_Identifier)
+    _uri_re = re.compile(r'^demo:\((?P<base>.*)\)/\((?P<changes>.*)\)(?P<frag>#.*)?$')
+
+    def __call__(self, uri):
+        def baduri(why):
+            bad = 'demo: invalid uri %r' % uri
+            if why:
+                bad += ": " + why
+            raise ValueError(bad)
+
+        m = self._uri_re.match(uri)
+        if m is None:
+            baduri('')
+
+        base_uri = m.group('base')
+        delta_uri = m.group('changes')
+
+        basef, base_dbkw = _resolve_uri(base_uri)
+        if base_dbkw:
+            baduri('DB arguments in base')
+        deltaf, delta_dbkw = _resolve_uri(delta_uri)
+        if delta_dbkw:
+            baduri('DB arguments in changes')
+
+        frag = m.group('frag')
+        dbkw = {}
+        if frag:
+            dbkw = dict(parse_qsl(frag[1:]))
+
+        def factory():
+            base = basef()
+            delta = deltaf()
+            return DemoStorage(base=base, changes=delta)
+
+        return factory, dbkw
+
+
 client_storage_resolver = ClientStorageURIResolver()
 file_storage_resolver = FileStorageURIResolver()
 zconfig_resolver = ZConfigURIResolver()
 mapping_storage_resolver = MappingStorageURIResolver()
+demo_storage_resolver = DemoStorageURIResolver()

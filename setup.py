@@ -61,6 +61,7 @@ setup(name='zodburi',
       file = zodburi.resolvers:file_storage_resolver
       zconfig = zodburi.resolvers:zconfig_resolver
       memory = zodburi.resolvers:mapping_storage_resolver
+      demo = zodburi.resolvers:demo_storage_resolver
       """,
       extras_require = {
         'testing': testing_extras,

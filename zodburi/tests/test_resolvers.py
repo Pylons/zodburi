@@ -600,6 +600,54 @@ class TestMappingStorageURIResolver(Base, unittest.TestCase):
         self.assertEqual(storage.__name__, 'storagename')
 
 
+class TestDemoStorageURIResolver(unittest.TestCase):
+
+    def _getTargetClass(self):
+        from zodburi.resolvers import DemoStorageURIResolver
+        return DemoStorageURIResolver
+
+    def _makeOne(self):
+        klass = self._getTargetClass()
+        return klass()
+
+    def test_fsoverlay(self):
+        import os.path, tempfile, shutil
+        tmpdir = tempfile.mkdtemp()
+        def _():
+            shutil.rmtree(tmpdir)
+        self.addCleanup(_)
+
+        resolver = self._makeOne()
+        basef   = os.path.join(tmpdir, 'base.fs')
+        changef = os.path.join(tmpdir, 'changes.fs')
+        self.assertFalse(os.path.exists(basef))
+        self.assertFalse(os.path.exists(changef))
+        factory, dbkw = resolver('demo:(file://%s)/(file://%s?quota=200)' % (basef, changef))
+        self.assertEqual(dbkw, {})
+        demo = factory()
+        from ZODB.DemoStorage import DemoStorage
+        from ZODB.FileStorage import FileStorage
+        self.assertTrue(isinstance(demo, DemoStorage))
+        self.assertTrue(isinstance(demo.base, FileStorage))
+        self.assertTrue(isinstance(demo.changes, FileStorage))
+        self.assertTrue(os.path.exists(basef))
+        self.assertTrue(os.path.exists(changef))
+        self.assertEqual(demo.changes._quota, 200)
+
+    def test_parse_frag(self):
+        resolver = self._makeOne()
+        factory, dbkw = resolver('demo:(memory://111)/(memory://222)#foo=bar&abc=def')
+        self.assertEqual(dbkw, {'foo': 'bar', 'abc': 'def'})
+        demo = factory()
+        from ZODB.DemoStorage import DemoStorage
+        from ZODB.MappingStorage import MappingStorage
+        self.assertTrue(isinstance(demo, DemoStorage))
+        self.assertTrue(isinstance(demo.base, MappingStorage))
+        self.assertEqual(demo.base.__name__, '111')
+        self.assertTrue(isinstance(demo.changes, MappingStorage))
+        self.assertEqual(demo.changes.__name__, '222')
+
+
 class TestEntryPoints(unittest.TestCase):
 
     def test_it(self):
@@ -610,6 +658,7 @@ class TestEntryPoints(unittest.TestCase):
             ('zeo', resolvers.ClientStorageURIResolver),
             ('file', resolvers.FileStorageURIResolver),
             ('zconfig', resolvers.ZConfigURIResolver),
+            ('demo', resolvers.DemoStorageURIResolver),
         ]
         for name, cls in expected:
             target = load_entry_point('zodburi', 'zodburi.resolvers', name)
