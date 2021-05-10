@@ -1,0 +1,14 @@
+graft docs
+prune docs/_build
+graft zodburi
+
+include README.rst
+include CHANGES.rst
+include contributing.md
+include CONTRIBUTORS.txt
+include COPYRIGHT.txt
+include LICENSE.txt
+
+include tox.ini rtd.txt
+
+recursive-exclude * __pycache__ *.py[cod]
