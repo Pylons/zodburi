@@ -3,12 +3,18 @@
 Change Log
 ----------
 
-2.4.1 (unreleased)
+2.5.0 (unreleased)
 ~~~~~~~~~~~~~~~~~~
+
+- Support both ZODB4 and ZODB5.
+
+- Add support for PyPy.
 
 - Add support for Python 3.8.
 
 - Drop support for Python 3.4.
+
+- Add support for ``demo:`` URI scheme.
 
 2.4.0 (2019-01-11)
 ~~~~~~~~~~~~~~~~~~
