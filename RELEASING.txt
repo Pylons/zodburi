@@ -1,0 +1,14 @@
+========================
+ Making zodburi release
+========================
+
+To make a next release, by default, command ``fullrelease`` from
+`zest.releaser`__ works fine. It will go through to update version number,
+changelog, commit and tag those changes, upload the package to PyPI, and to
+further switch the source tree for the next development cycle.
+
+If/when needed, one could manually make all the steps described above.
+See `Packaging Python Projects`__ and zodburi git history for details.
+
+__ https://pypi.org/project/zest.releaser/
+__ https://packaging.python.org/tutorials/packaging-projects/
