@@ -16,7 +16,7 @@ See zest.releaser documentation for details:
 https://zestreleaser.readthedocs.io/en/latest/overview.html#available-commands
 
 
-If/when needed, one could also manually make all release steps described above.
+If needed, one could instead manually make all release steps described above.
 See "Packaging Python Projects"
 
 https://packaging.python.org/tutorials/packaging-projects/

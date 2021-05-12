@@ -3,7 +3,7 @@ prune docs/_build
 graft zodburi
 
 include README.rst
-include RELEASING.txt
+exclude RELEASING.txt
 include CHANGES.rst
 include contributing.md
 include CONTRIBUTORS.txt
