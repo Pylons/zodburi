@@ -1,0 +1,24 @@
+We use zest.releaser for release automation.
+
+https://pypi.org/project/zest.releaser/
+
+To make a new release, first prepare by adding any omitted entries to
+CHANGES.rst. Then use the following command, accepting all default options:
+
+    fullrelease
+
+It will go through to update version number, changelog, commit and tag those
+changes, upload the package to PyPI, and to further switch the source tree for
+the next development cycle.
+
+See zest.releaser documentation for details:
+
+https://zestreleaser.readthedocs.io/en/latest/overview.html#available-commands
+
+
+If/when needed, one could also manually make all release steps described above.
+See "Packaging Python Projects"
+
+https://packaging.python.org/tutorials/packaging-projects/
+
+and zodburi git history for details.
