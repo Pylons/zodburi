@@ -3,7 +3,7 @@
 Change Log
 ----------
 
-2.5.0 (unreleased)
+2.5.0 (2021-05-12)
 ~~~~~~~~~~~~~~~~~~
 
 - Support both ZODB4 and ZODB5.
