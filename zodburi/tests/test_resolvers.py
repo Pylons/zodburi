@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 import pkg_resources
 import unittest
 
@@ -208,8 +208,8 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
     def test_dbargs(self):
         resolver = self._makeOne()
         factory, dbkw = resolver(
-            ('file:///tmp/../foo/bar?connection_pool_size=1'
-             '&connection_cache_size=1&database_name=dbname'))
+            'file:///tmp/../foo/bar?connection_pool_size=1'
+             '&connection_cache_size=1&database_name=dbname')
         self.assertEqual(dbkw, {'connection_cache_size': '1',
                                 'connection_pool_size': '1',
                                 'database_name': 'dbname'})
@@ -487,7 +487,7 @@ class TestZConfigURIResolver(unittest.TestCase):
           database-name foo
           %s
         </zodb>
-        """ % '\n'.join("%s %s" % (
+        """ % '\n'.join("{} {}".format(
                             name.replace('_', '-'),
                             '%sMB' % i if name in bytes_parameters else i,
                            )
@@ -587,7 +587,7 @@ class TestDemoStorageURIResolver(unittest.TestCase):
         changef = os.path.join(tmpdir, 'changes.fs')
         self.assertFalse(os.path.exists(basef))
         self.assertFalse(os.path.exists(changef))
-        factory, dbkw = resolver('demo:(file://%s)/(file://%s?quota=200)' % (basef, changef))
+        factory, dbkw = resolver('demo:(file://{})/(file://{}?quota=200)'.format(basef, changef))
         self.assertEqual(dbkw, {})
         demo = factory()
         from ZODB.DemoStorage import DemoStorage

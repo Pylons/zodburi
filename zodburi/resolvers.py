@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from io import BytesIO
 import os
 import re
@@ -19,11 +18,8 @@ from zodburi._compat import parse_qsl
 from zodburi._compat import urlsplit
 from zodburi import _resolve_uri
 
-# Capability test for older Pythons (2.x < 2.7.4, 3.x < 3.2.4)
-(scheme, netloc, path, query, frag) = urlsplit('scheme:///path/#frag')
-_BROKEN_URLSPLIT = frag != 'frag'
 
-class Resolver(object):
+class Resolver:
     _int_args = ()
     _string_args = ()
     _bytesize_args = ()
@@ -161,7 +157,7 @@ class ClientStorageURIResolver(Resolver):
         return factory, unused
 
 
-class ZConfigURIResolver(object):
+class ZConfigURIResolver:
 
     schema_xml_template = b"""
     <schema>
@@ -173,11 +169,6 @@ class ZConfigURIResolver(object):
 
     def __call__(self, uri):
         (scheme, netloc, path, query, frag) = urlsplit(uri)
-        if _BROKEN_URLSPLIT: #pragma NO COVER
-            # urlsplit used not to allow fragments in non-standard schemes,
-            # stuffed everything into 'path'
-            (scheme, netloc, path, query, frag
-            ) = urlsplit('http:' + path)
         path = os.path.normpath(path)
         schema_xml = self.schema_xml_template
         schema = loadSchemaFile(BytesIO(schema_xml))
@@ -208,7 +199,7 @@ class ZConfigURIResolver(object):
         return factory.open, dbkw
 
 
-class DemoStorageURIResolver(object):
+class DemoStorageURIResolver:
 
     # demo:(base_uri)/(δ_uri)#dbkw...
     # URI format follows XRI Cross-references to refer to base and δ
