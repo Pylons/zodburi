@@ -3,9 +3,6 @@ import pkg_resources
 import unittest
 
 
-ZODB_VERSION = tuple(map(int, pkg_resources.get_distribution("ZODB").version.split('.')))
-
-
 class Base:
 
     def test_interpret_kwargs_noargs(self):
@@ -442,25 +439,15 @@ class TestZConfigURIResolver(unittest.TestCase):
         storage = factory()
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
-        if ZODB_VERSION[0] < 5:
-            self.assertEqual(dbkw,
-                             {'connection_cache_size': 5000,
-                              'connection_cache_size_bytes': 0,
-                              'connection_historical_cache_size': 1000,
-                              'connection_historical_cache_size_bytes': 0,
-                              'connection_historical_pool_size': 3,
-                              'connection_historical_timeout': 300,
-                              'connection_pool_size': 7})
-        else:
-            self.assertEqual(dbkw,
-                             {'connection_cache_size': 5000,
-                              'connection_cache_size_bytes': 0,
-                              'connection_historical_cache_size': 1000,
-                              'connection_historical_cache_size_bytes': 0,
-                              'connection_historical_pool_size': 3,
-                              'connection_historical_timeout': 300,
-                              'connection_large_record_size': 16777216,
-                              'connection_pool_size': 7})
+        self.assertEqual(dbkw,
+                         {'connection_cache_size': 5000,
+                          'connection_cache_size_bytes': 0,
+                          'connection_historical_cache_size': 1000,
+                          'connection_historical_cache_size_bytes': 0,
+                          'connection_historical_pool_size': 3,
+                          'connection_historical_timeout': 300,
+                          'connection_large_record_size': 16777216,
+                          'connection_pool_size': 7})
 
 
     def test_named_database(self):
@@ -479,27 +466,16 @@ class TestZConfigURIResolver(unittest.TestCase):
         storage = factory()
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
-        if ZODB_VERSION[0] < 5:
-            self.assertEqual(dbkw,
-                             {'connection_cache_size': 20000,
-                              'connection_cache_size_bytes': 0,
-                              'connection_historical_cache_size': 1000,
-                              'connection_historical_cache_size_bytes': 0,
-                              'connection_historical_pool_size': 3,
-                              'connection_historical_timeout': 300,
-                              'connection_pool_size': 5,
-                              'database_name': 'foo'})
-        else:
-            self.assertEqual(dbkw,
-                             {'connection_cache_size': 20000,
-                              'connection_cache_size_bytes': 0,
-                              'connection_historical_cache_size': 1000,
-                              'connection_historical_cache_size_bytes': 0,
-                              'connection_historical_pool_size': 3,
-                              'connection_historical_timeout': 300,
-                              'connection_large_record_size': 16777216,
-                              'connection_pool_size': 5,
-                              'database_name': 'foo'})
+        self.assertEqual(dbkw,
+                         {'connection_cache_size': 20000,
+                          'connection_cache_size_bytes': 0,
+                          'connection_historical_cache_size': 1000,
+                          'connection_historical_cache_size_bytes': 0,
+                          'connection_historical_pool_size': 3,
+                          'connection_historical_timeout': 300,
+                          'connection_large_record_size': 16777216,
+                          'connection_pool_size': 5,
+                          'database_name': 'foo'})
 
 
     def test_database_all_options(self):
@@ -546,27 +522,16 @@ class TestZConfigURIResolver(unittest.TestCase):
         storage = factory()
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
-        if ZODB_VERSION[0] < 5:
-            self.assertEqual(dbkw,
-                             {'cache_size': 5000,
-                              'cache_size_bytes': 0,
-                              'historical_cache_size': 1000,
-                              'historical_cache_size_bytes': 0,
-                              'historical_pool_size': 3,
-                              'historical_timeout': 300,
-                              'pool_size': 7,
-                              'database_name': 'unnamed'})
-        else:
-            self.assertEqual(dbkw,
-                             {'cache_size': 5000,
-                              'cache_size_bytes': 0,
-                              'historical_cache_size': 1000,
-                              'historical_cache_size_bytes': 0,
-                              'historical_pool_size': 3,
-                              'historical_timeout': 300,
-                              'large_record_size': 16777216,
-                              'pool_size': 7,
-                              'database_name': 'unnamed'})
+        self.assertEqual(dbkw,
+                         {'cache_size': 5000,
+                          'cache_size_bytes': 0,
+                          'historical_cache_size': 1000,
+                          'historical_cache_size_bytes': 0,
+                          'historical_pool_size': 3,
+                          'historical_timeout': 300,
+                          'large_record_size': 16777216,
+                          'pool_size': 7,
+                          'database_name': 'unnamed'})
 
 
 class TestMappingStorageURIResolver(Base, unittest.TestCase):
