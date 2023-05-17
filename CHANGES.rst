@@ -3,7 +3,7 @@
 Change Log
 ----------
 
-2.6.0 (unreleased)
+2.6.0 (2023-05-17)
 ~~~~~~~~~~~~~~~~~~
 
 - Stop support for ZODB4
