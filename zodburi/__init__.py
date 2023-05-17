@@ -35,7 +35,7 @@ parameters = dict(database_name = 'database_name')
 for parameter in connection_parameters:
     parameters['connection_' + parameter] = parameter
 
-has_units = re.compile('\s*(\d+)\s*([kmg])b\s*$').match
+has_units = re.compile(r'\s*(\d+)\s*([kmg])b\s*$').match
 units = dict(k=1<<10, m=1<<20, g=1<<30)
 def _parse_bytes(s):
     m = has_units(s.lower())

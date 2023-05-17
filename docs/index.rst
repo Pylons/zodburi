@@ -7,14 +7,14 @@ Overview
 A library which parses URIs and converts them to ZODB storage objects and
 database arguments.
 
-It will run under CPython 2.7, 3.5 to 3.8, pypy and pypy3.  It will not run under Jython.  It requires ZODB >= 3.10.0.
+It will run under CPython 3.7+ and pypy3.  It will not run under Jython.  It requires ZODB >= 5.0.0.
 
 Installation
 ------------
 
-Install using setuptools, e.g. (within a virtualenv)::
+Install using pip, e.g. (within a virtualenv)::
 
-  $ easy_install zodburi
+  $ pip install zodburi
 
 Using
 -----

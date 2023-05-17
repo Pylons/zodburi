@@ -3,10 +3,12 @@
 Change Log
 ----------
 
-2.5.1 (unreleased)
+2.6.0 (unreleased)
 ~~~~~~~~~~~~~~~~~~
 
-- Nothing changed yet.
+- Stop support for ZODB4
+
+- Stop support for python<3.7
 
 
 2.5.0 (2021-05-12)

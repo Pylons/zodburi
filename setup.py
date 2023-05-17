@@ -8,13 +8,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 try:
     with open(os.path.join(here, 'README.rst')) as f:
         README = f.read()
-except IOError:
+except OSError:
     README = ''
 
 try:
     with open(os.path.join(here, 'CHANGES.rst')) as f:
         CHANGES = f.read()
-except IOError:
+except OSError:
     CHANGES = ''
 
 requires = ['ZODB', 'ZConfig', 'ZEO']
@@ -33,13 +33,12 @@ setup(name='zodburi',
       classifiers=[
         "Intended Audience :: Developers",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "License :: Repoze Public License",
