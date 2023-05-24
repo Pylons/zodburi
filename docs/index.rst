@@ -163,12 +163,6 @@ blobstorage_dir
 blobstorage_layout
   string
 
-Misc
-++++
-
-demostorage
-  boolean (if true, wrap FileStorage in a DemoStorage)
-
 Example
 +++++++
 
@@ -242,12 +236,6 @@ blob_cache_size_check
   integer
 client_label
   string
-
-Misc
-++++
-
-demostorage
-  boolean (if true, wrap ClientStorage in a DemoStorage)
 
 Connection-related
 ++++++++++++++++++
