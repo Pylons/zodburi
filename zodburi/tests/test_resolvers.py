@@ -1,6 +1,7 @@
 from unittest import mock
 import pkg_resources
 import unittest
+import warnings
 
 
 class Base:
@@ -154,8 +155,13 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
         from ZODB.DemoStorage import DemoStorage
         from ZODB.FileStorage import FileStorage
         resolver = self._makeOne()
-        factory, dbkw = resolver(
-            'file://%s/db.db?demostorage=true' % self.tmpdir)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            factory, dbkw = resolver(
+                'file://%s/db.db?demostorage=true' % self.tmpdir)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+            self.assertIn("demostorage option is deprecated, use demo:// instead", str(w[-1].message))
         storage = factory()
         self.assertTrue(isinstance(storage, DemoStorage))
         self.assertTrue(isinstance(storage.base, FileStorage))
@@ -193,10 +199,15 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
         BLOB_DIR = os.path.join(self.tmpdir, 'blob')
         self.assertFalse(os.path.exists(DB_FILE))
         resolver = self._makeOne()
-        factory, dbkw = resolver(
-            'file://%s/db.db?quota=200&demostorage=true'
-            '&blobstorage_dir=%s/blob'
-            '&blobstorage_layout=bushy' % (self.tmpdir, q(self.tmpdir)))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            factory, dbkw = resolver(
+                'file://%s/db.db?quota=200&demostorage=true'
+                '&blobstorage_dir=%s/blob'
+                '&blobstorage_layout=bushy' % (self.tmpdir, q(self.tmpdir)))
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+            self.assertIn("demostorage option is deprecated, use demo:// instead", str(w[-1].message))
         storage = factory()
         self.assertTrue(isinstance(storage, DemoStorage))
         try:
@@ -340,8 +351,13 @@ class TestClientStorageURIResolver(unittest.TestCase):
     def test_invoke_factory_demostorage(self, ClientStorage):
         from ZODB.DemoStorage import DemoStorage
         resolver = self._makeOne()
-        factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false'
-                                 '&demostorage=true')
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false'
+                                     '&demostorage=true')
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+            self.assertIn("demostorage option is deprecated, use demo:// instead", str(w[-1].message))
         storage = factory()
         storage.close()
         self.assertTrue(isinstance(storage, DemoStorage))

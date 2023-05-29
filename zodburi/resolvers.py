@@ -1,6 +1,7 @@
 from io import BytesIO
 import os
 import re
+import warnings
 
 from ZConfig import loadConfig
 from ZConfig import loadSchemaFile
@@ -89,6 +90,8 @@ class FileStorageURIResolver(Resolver):
         if 'demostorage'in kw:
             kw.pop('demostorage')
             demostorage = True
+            warnings.warn("demostorage option is deprecated, use demo:// instead",
+                          DeprecationWarning)
 
         blobstorage_dir = None
         blobstorage_layout = 'automatic'
@@ -149,6 +152,8 @@ class ClientStorageURIResolver(Resolver):
         kw, unused = self.interpret_kwargs(kw)
         if 'demostorage' in kw:
             kw.pop('demostorage')
+            warnings.warn("demostorage option is deprecated, use demo:// instead",
+                          DeprecationWarning)
             def factory():
                 return DemoStorage(base=ClientStorage(*args, **kw))
         else:

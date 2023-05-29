@@ -166,7 +166,7 @@ blobstorage_layout
 Misc
 ++++
 
-demostorage
+demostorage (deprecated in favour of ``demo:`` URI scheme)
   boolean (if true, wrap FileStorage in a DemoStorage)
 
 Example
@@ -246,7 +246,7 @@ client_label
 Misc
 ++++
 
-demostorage
+demostorage (deprecated in favour of ``demo:`` URI scheme)
   boolean (if true, wrap ClientStorage in a DemoStorage)
 
 Connection-related

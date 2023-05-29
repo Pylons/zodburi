@@ -6,7 +6,7 @@ Change Log
 2.6.1 (unreleased)
 ~~~~~~~~~~~~~~~~~~
 
-- Nothing changed yet.
+- Deprecate ``?demostorage`` in favour of ``demo:`` URI scheme.
 
 
 2.6.0 (2023-05-17)
