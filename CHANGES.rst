@@ -3,8 +3,12 @@
 Change Log
 ----------
 
-2.6.1 (unreleased)
+2.7.0 (unreleased)
 ~~~~~~~~~~~~~~~~~~
+
+- Add support for Python 3.9 - 3.12.
+
+- Drop support for Python 3.7.
 
 - Deprecate ``?demostorage`` in favour of ``demo:`` URI scheme.
 
@@ -12,9 +16,9 @@ Change Log
 2.6.0 (2023-05-17)
 ~~~~~~~~~~~~~~~~~~
 
-- Stop support for ZODB4
+- Drop support for ZODB4
 
-- Stop support for python<3.7
+- Drop support for python<3.7
 
 
 2.5.0 (2021-05-12)
