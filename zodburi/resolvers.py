@@ -1,6 +1,8 @@
 from io import BytesIO
 import os
 import re
+from urllib.parse import parse_qsl
+from urllib.parse import urlsplit
 import warnings
 
 from ZConfig import loadConfig
@@ -17,8 +19,6 @@ from zodburi import CONNECTION_PARAMETERS
 from zodburi.datatypes import convert_bytesize
 from zodburi.datatypes import convert_int
 from zodburi.datatypes import convert_tuple
-from zodburi._compat import parse_qsl
-from zodburi._compat import urlsplit
 
 
 class Resolver:

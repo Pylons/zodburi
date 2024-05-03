@@ -1,5 +1,6 @@
 from importlib.metadata import distribution
 from unittest import mock
+from urllib.parse import quote
 import unittest
 import warnings
 
@@ -176,7 +177,6 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
     def test_invoke_factory_blobstorage(self):
         import os
         from ZODB.blob import BlobStorage
-        from .._compat import quote as q
         DB_FILE = os.path.join(self.tmpdir, 'db.db')
         BLOB_DIR = os.path.join(self.tmpdir, 'blob')
         self.assertFalse(os.path.exists(DB_FILE))
@@ -184,7 +184,7 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
         factory, dbkw = resolver(
             'file://%s/db.db?quota=200'
             '&blobstorage_dir=%s/blob'
-            '&blobstorage_layout=bushy' % (self.tmpdir, q(self.tmpdir)))
+            '&blobstorage_layout=bushy' % (self.tmpdir, quote(self.tmpdir)))
         storage = factory()
         self.assertTrue(isinstance(storage, BlobStorage))
         try:
@@ -196,7 +196,6 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
     def test_invoke_factory_blobstorage_and_demostorage(self):
         import os
         from ZODB.DemoStorage import DemoStorage
-        from .._compat import quote as q
         DB_FILE = os.path.join(self.tmpdir, 'db.db')
         BLOB_DIR = os.path.join(self.tmpdir, 'blob')
         self.assertFalse(os.path.exists(DB_FILE))
@@ -206,7 +205,10 @@ class TestFileStorageURIResolver(Base, unittest.TestCase):
             factory, dbkw = resolver(
                 'file://%s/db.db?quota=200&demostorage=true'
                 '&blobstorage_dir=%s/blob'
-                '&blobstorage_layout=bushy' % (self.tmpdir, q(self.tmpdir)))
+                '&blobstorage_layout=bushy' % (
+                self.tmpdir, quote(
+                    self.tmpdir
+                )))
             self.assertEqual(len(w), 1)
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
             self.assertIn("demostorage option is deprecated, use demo:// instead", str(w[-1].message))
