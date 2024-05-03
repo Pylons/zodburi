@@ -1,7 +1,9 @@
+from importlib.metadata import distribution
 from unittest import mock
-import pkg_resources
 import unittest
 import warnings
+
+import pytest
 
 
 class Base:
@@ -495,7 +497,7 @@ class TestZConfigURIResolver(unittest.TestCase):
 
 
     def test_database_all_options(self):
-        from zodburi import connection_parameters, bytes_parameters
+        from zodburi import CONNECTION_PARAMETERS, BYTES_PARAMETERS
         self.tmp.write(("""
         <zodb x>
           <mappingstorage>
@@ -505,10 +507,10 @@ class TestZConfigURIResolver(unittest.TestCase):
         </zodb>
         """ % '\n'.join("{} {}".format(
                             name.replace('_', '-'),
-                            '%sMB' % i if name in bytes_parameters else i,
+                            '%sMB' % i if name in BYTES_PARAMETERS else i,
                            )
                         for (i, name)
-                        in enumerate(connection_parameters)
+                        in enumerate(CONNECTION_PARAMETERS)
                         )).encode())
         self.tmp.flush()
         resolver = self._makeOne()
@@ -517,10 +519,10 @@ class TestZConfigURIResolver(unittest.TestCase):
         from ZODB.MappingStorage import MappingStorage
         self.assertTrue(isinstance(storage, MappingStorage))
         expect = dict(database_name='foo')
-        for i, parameter in enumerate(connection_parameters):
+        for i, parameter in enumerate(CONNECTION_PARAMETERS):
             cparameter = 'connection_' + parameter
             expect[cparameter] = i
-            if parameter in bytes_parameters:
+            if parameter in BYTES_PARAMETERS:
                 expect[cparameter] *= 1<<20
         self.assertEqual(dbkw, expect)
 
@@ -591,6 +593,35 @@ class TestDemoStorageURIResolver(unittest.TestCase):
         klass = self._getTargetClass()
         return klass()
 
+    def test_invalid_uri_no_match(self):
+        from zodburi.resolvers import InvalidDemoStorgeURI
+        resolver = self._makeOne()
+
+        with pytest.raises(InvalidDemoStorgeURI):
+            resolver("bogus:name")
+
+    def test_invalid_uri_kwargs_in_base(self):
+        from zodburi.resolvers import InvalidDemoStorgeURI
+        resolver = self._makeOne()
+
+        with pytest.raises(InvalidDemoStorgeURI):
+            resolver(
+                "demo:"
+                "(file:///tmp/blah?pool_size=1234)/"
+                "(file:///tmp/qux)"
+            )
+
+    def test_invalid_uri_kwargs_in_changes(self):
+        from zodburi.resolvers import InvalidDemoStorgeURI
+        resolver = self._makeOne()
+
+        with pytest.raises(InvalidDemoStorgeURI):
+            resolver(
+                "demo:"
+                "(file:///tmp/blah)/"
+                "(file:///tmp/qux?pool_size=1234)"
+            )
+
     def test_fsoverlay(self):
         import os.path, tempfile, shutil
         tmpdir = tempfile.mkdtemp()
@@ -632,8 +663,11 @@ class TestDemoStorageURIResolver(unittest.TestCase):
 class TestEntryPoints(unittest.TestCase):
 
     def test_it(self):
-        from pkg_resources import load_entry_point
         from zodburi import resolvers
+
+        our_eps = {
+            ep.name: ep for ep in distribution("zodburi").entry_points
+        }
         expected = [
             ('memory', resolvers.MappingStorageURIResolver),
             ('zeo', resolvers.ClientStorageURIResolver),
@@ -642,5 +676,5 @@ class TestEntryPoints(unittest.TestCase):
             ('demo', resolvers.DemoStorageURIResolver),
         ]
         for name, cls in expected:
-            target = load_entry_point('zodburi', 'zodburi.resolvers', name)
+            target = our_eps[name].load()
             self.assertTrue(isinstance(target, cls))

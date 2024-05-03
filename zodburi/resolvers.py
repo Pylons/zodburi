@@ -12,12 +12,13 @@ from ZODB.DemoStorage import DemoStorage
 from ZODB.FileStorage.FileStorage import FileStorage
 from ZODB.MappingStorage import MappingStorage
 
+from zodburi import _resolve_uri
+from zodburi import CONNECTION_PARAMETERS
 from zodburi.datatypes import convert_bytesize
 from zodburi.datatypes import convert_int
 from zodburi.datatypes import convert_tuple
 from zodburi._compat import parse_qsl
 from zodburi._compat import urlsplit
-from zodburi import _resolve_uri
 
 
 class Resolver:
@@ -191,9 +192,8 @@ class ZConfigURIResolver:
         if isinstance(config_item, ZODBDatabase):
             config = config_item.config
             factory = config.storage
-            from zodburi import connection_parameters
             dbkw = {'connection_' + name: getattr(config, name)
-                    for name in connection_parameters
+                    for name in CONNECTION_PARAMETERS
                     if getattr(config, name) is not None}
             if config.database_name:
                 dbkw['database_name'] = config.database_name
@@ -204,36 +204,51 @@ class ZConfigURIResolver:
         return factory.open, dbkw
 
 
+class InvalidDemoStorgeURI(ValueError):
+
+    def __init__(self, uri, why=None):
+        self.uri = uri
+        self.why = why
+
+        if why is not None:
+            msg = f"demo: invalid uri {uri} : {why}"
+        else:
+            msg = f"demo: invalid uri {uri}"
+
+        super().__init__(msg)
+
 class DemoStorageURIResolver:
 
     # demo:(base_uri)/(δ_uri)#dbkw...
     # URI format follows XRI Cross-references to refer to base and δ
     # (see https://en.wikipedia.org/wiki/Extensible_Resource_Identifier)
-    _uri_re = re.compile(r'^demo:\((?P<base>.*)\)/\((?P<changes>.*)\)(?P<frag>#.*)?$')
+    _uri_re = re.compile(
+        r'^demo:\((?P<base>.*)\)/\((?P<changes>.*)\)(?P<frag>#.*)?$'
+    )
 
     def __call__(self, uri):
-        def baduri(why):
-            bad = 'demo: invalid uri %r' % uri
-            if why:
-                bad += ": " + why
-            raise ValueError(bad)
 
         m = self._uri_re.match(uri)
+
         if m is None:
-            baduri('')
+            raise InvalidDemoStorgeURI(uri)
 
         base_uri = m.group('base')
         delta_uri = m.group('changes')
 
         basef, base_dbkw = _resolve_uri(base_uri)
+
         if base_dbkw:
-            baduri('DB arguments in base')
+            raise InvalidDemoStorgeURI(uri, 'DB arguments in base')
+
         deltaf, delta_dbkw = _resolve_uri(delta_uri)
+
         if delta_dbkw:
-            baduri('DB arguments in changes')
+            raise InvalidDemoStorgeURI(uri, 'DB arguments in changes')
 
         frag = m.group('frag')
         dbkw = {}
+
         if frag:
             dbkw = dict(parse_qsl(frag[1:]))
 
