@@ -76,8 +76,8 @@ def test_resolve_uri_w_valid_scheme():
     expected_factory = object()
     expected_kw = {"database_name": "foo"}
 
-    with mock.patch("zodburi._resolve_uri") as ruri:
-        ruri.return_value = (expected_factory, expected_kw)
+    with mock.patch("zodburi._get_uri_factory_and_dbkw") as gufad:
+        gufad.return_value = (expected_factory, expected_kw)
         factory, dbkw = zodburi.resolve_uri(valid)
 
     assert factory is expected_factory

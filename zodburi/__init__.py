@@ -55,12 +55,12 @@ def resolve_uri(uri):
     returns a storage matching the spec defined in the uri.  dbkw is a dict of
     keyword arguments that may be passed to ZODB.DB.DB.
     """
-    factory, dbkw = _resolve_uri(uri)
+    factory, dbkw = _get_uri_factory_and_dbkw(uri)
     return factory, _get_dbkw(dbkw)
 
 
-# _resolve_uri serves resolve_uri: it returns factory and original raw dbkw.
-def _resolve_uri(uri):
+def _get_uri_factory_and_dbkw(uri):
+    """Return factory and original raw dbkw for a URI."""
     scheme = uri[:uri.find(":")]
     try:
         resolver_eps = entry_points(group="zodburi.resolvers")
@@ -74,6 +74,9 @@ def _resolve_uri(uri):
             return factory, dbkw
     else:
         raise NoResolverForScheme(uri)
+
+
+_resolve_uri = _get_uri_factory_and_dbkw  # pragma: noqa  BBB alias
 
 
 def _parse_bytes(s):

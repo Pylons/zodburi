@@ -14,7 +14,7 @@ from ZODB.DemoStorage import DemoStorage
 from ZODB.FileStorage.FileStorage import FileStorage
 from ZODB.MappingStorage import MappingStorage
 
-from zodburi import _resolve_uri
+from zodburi import _get_uri_factory_and_dbkw
 from zodburi import CONNECTION_PARAMETERS
 from zodburi.datatypes import convert_bytesize
 from zodburi.datatypes import convert_int
@@ -236,12 +236,12 @@ class DemoStorageURIResolver:
         base_uri = m.group('base')
         delta_uri = m.group('changes')
 
-        basef, base_dbkw = _resolve_uri(base_uri)
+        basef, base_dbkw = _get_uri_factory_and_dbkw(base_uri)
 
         if base_dbkw:
             raise InvalidDemoStorgeURI(uri, 'DB arguments in base')
 
-        deltaf, delta_dbkw = _resolve_uri(delta_uri)
+        deltaf, delta_dbkw = _get_uri_factory_and_dbkw(delta_uri)
 
         if delta_dbkw:
             raise InvalidDemoStorgeURI(uri, 'DB arguments in changes')
