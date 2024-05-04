@@ -3,7 +3,6 @@ from unittest import mock
 import pytest
 
 import zodburi
-from zodburi import resolvers
 
 
 @pytest.mark.parametrize("source, expected", [
@@ -23,6 +22,7 @@ def _expected_dbkw(**kw):
     dbkw = zodburi._DEFAULT_DBKW.copy()
     dbkw.update(kw)
     return dbkw
+
 
 @pytest.mark.parametrize("kw, expected", [
     ({}, _expected_dbkw()),

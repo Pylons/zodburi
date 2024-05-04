@@ -1,682 +1,762 @@
+import contextlib
 from importlib.metadata import distribution
+import os
+import pathlib
+import tempfile
 from unittest import mock
 from urllib.parse import quote
 import unittest
 import warnings
 
 import pytest
+from ZEO.ClientStorage import ClientStorage
+from ZODB.blob import BlobStorage
+from ZODB.DemoStorage import DemoStorage
+from ZODB.FileStorage import FileStorage
+from ZODB.MappingStorage import MappingStorage
 
 
-class Base:
+FS_FILENAME = "db.db"
+FS_BLOBDIR = "blob"
 
-    def test_interpret_kwargs_noargs(self):
-        resolver = self._makeOne()
-        kwargs = resolver.interpret_kwargs({})
-        self.assertEqual(kwargs, ({}, {}))
 
-    def test_bytesize_args(self):
-        resolver = self._makeOne()
-        names = sorted(resolver._bytesize_args)
-        kwargs = {}
-        for name in names:
-            kwargs[name] = '10MB'
-        args = resolver.interpret_kwargs(kwargs)[0]
-        keys = args.keys()
-        self.assertEqual(sorted(keys), names)
-        for name, value in args.items():
-            self.assertEqual(value, 10*1024*1024)
+@pytest.fixture(scope="function")
+def tmpdir():
+    with tempfile.TemporaryDirectory() as tmp:
+        yield tmp
 
-    def test_int_args(self):
-        resolver = self._makeOne()
-        names = sorted(resolver._int_args)
-        kwargs = {}
-        for name in names:
-            kwargs[name] = '10'
-        args = resolver.interpret_kwargs(kwargs)[0]
-        keys = sorted(args.keys())
-        self.assertEqual(sorted(keys), sorted(names))
-        for name, value in args.items():
-            self.assertEqual(value, 10)
 
-    def test_string_args(self):
-        resolver = self._makeOne()
-        names = sorted(resolver._string_args)
-        kwargs = {}
-        for name in names:
-            kwargs[name] = 'string'
-        args = resolver.interpret_kwargs(kwargs)[0]
-        keys = args.keys()
-        self.assertEqual(sorted(keys), names)
-        for name, value in args.items():
-            self.assertEqual(value, 'string')
+@pytest.fixture(scope="function")
+def zconfig_tmpfile():
+    with tempfile.NamedTemporaryFile() as tmp:
+        yield tmp
 
-    def test_float_args(self):
-        resolver = self._makeOne()
-        resolver._float_args = ('pi', 'PI')
-        names = sorted(resolver._float_args)
-        kwargs = {}
-        for name in names:
-            kwargs[name] = '3.14'
-        args = resolver.interpret_kwargs(kwargs)[0]
-        keys = args.keys()
-        self.assertEqual(sorted(keys), names)
-        for name, value in args.items():
-            self.assertEqual(value, 3.14)
 
-    def test_tuple_args(self):
-        resolver = self._makeOne()
-        resolver._tuple_args = ('foo', 'bar')
-        names = sorted(resolver._tuple_args)
-        kwargs = {}
-        for name in names:
-            kwargs[name] = 'first,second,third'
-        args = resolver.interpret_kwargs(kwargs)[0]
-        keys = args.keys()
-        self.assertEqual(sorted(keys), names)
-        for name, value in args.items():
-            self.assertEqual(value, ('first', 'second', 'third'))
+@pytest.fixture(scope="function")
+def zconfig_path(zconfig_tmpfile):
+    yield pathlib.Path(zconfig_tmpfile.name)
 
-class TestFileStorageURIResolver(Base, unittest.TestCase):
 
-    def _getTargetClass(self):
-        from zodburi.resolvers import FileStorageURIResolver
-        return FileStorageURIResolver
+def _fs_resolver():
+    from zodburi.resolvers import FileStorageURIResolver
+    return FileStorageURIResolver()
 
-    def _makeOne(self):
-        klass = self._getTargetClass()
-        return klass()
 
-    def setUp(self):
-        import tempfile
-        self.tmpdir = tempfile.mkdtemp()
+def _mapping_resolver():
+    from zodburi.resolvers import MappingStorageURIResolver
+    return MappingStorageURIResolver()
 
-    def tearDown(self):
-        import shutil
-        shutil.rmtree(self.tmpdir)
 
-    def test_bool_args(self):
-        resolver = self._makeOne()
-        f = resolver.interpret_kwargs
-        kwargs = f({'read_only':'1'})
-        self.assertEqual(kwargs[0], {'read_only':1})
-        kwargs = f({'read_only':'true'})
-        self.assertEqual(kwargs[0], {'read_only':1})
-        kwargs = f({'read_only':'on'})
-        self.assertEqual(kwargs[0], {'read_only':1})
-        kwargs = f({'read_only':'off'})
-        self.assertEqual(kwargs[0], {'read_only':0})
-        kwargs = f({'read_only':'no'})
-        self.assertEqual(kwargs[0], {'read_only':0})
-        kwargs = f({'read_only':'false'})
-        self.assertEqual(kwargs[0], {'read_only':0})
+def _client_resolver():
+    from zodburi.resolvers import ClientStorageURIResolver
+    return ClientStorageURIResolver()
 
-    @mock.patch('zodburi.resolvers.FileStorage')
-    def test_call_no_qs(self, FileStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('file:///tmp/foo/bar')
+
+def _zconfig_resolver():
+    from zodburi.resolvers import ZConfigURIResolver
+    return ZConfigURIResolver()
+
+def _demo_resolver():
+    from zodburi.resolvers import DemoStorageURIResolver
+    return DemoStorageURIResolver()
+
+
+@pytest.mark.parametrize("factory", [_fs_resolver, _mapping_resolver])
+def test_interpret_kwargs_noargs(factory):
+    resolver = factory()
+
+    new, unused = resolver.interpret_kwargs({})
+
+    assert new == {}
+    assert unused == {}
+
+
+@pytest.mark.parametrize("factory", [_fs_resolver, _mapping_resolver])
+def test_interpret_kwargs_bytesize_args(factory):
+    resolver = factory()
+    names = sorted(resolver._bytesize_args)
+    kwargs = {
+        name: "10MB" for name in names
+    }
+
+    new, unused = resolver.interpret_kwargs(kwargs)
+
+    assert sorted(new) == names
+
+    if new:
+        assert set(new.values()) == {10 * 1024 * 1024}
+
+
+@pytest.mark.parametrize("factory", [_fs_resolver, _mapping_resolver])
+def test_interpret_kwargs_int_args(factory):
+    resolver = factory()
+    names = sorted(resolver._int_args)
+    kwargs = {
+        name: "10" for name in names
+    }
+
+    new, unused = resolver.interpret_kwargs(kwargs)
+
+    assert sorted(new) == sorted(new)
+
+    if new:
+        assert set(new.values()) == {10}
+
+
+@pytest.mark.parametrize("factory", [_fs_resolver, _mapping_resolver])
+def test_interpret_kwargs_string_args(factory):
+    resolver = factory()
+    names = sorted(resolver._string_args)
+    kwargs = {
+        name: "string" for name in names
+    }
+
+    new, unused = resolver.interpret_kwargs(kwargs)
+
+    assert sorted(new) == names
+
+    if new:
+        assert set(new.values()) == {"string"}
+
+
+@pytest.mark.parametrize("factory", [_fs_resolver, _mapping_resolver])
+def test_interpret_kwargs_float_args(factory):
+    resolver = factory()
+    resolver._float_args = ("pi", "PI")
+    names = sorted(resolver._float_args)
+    kwargs = {
+        "pi": "3.14",
+        "PI": "3.14",
+    }
+
+    new, unussed = resolver.interpret_kwargs(kwargs)
+
+    assert sorted(new) == names
+
+    if new:
+        assert set(new.values()) == {3.14}
+
+
+@pytest.mark.parametrize("factory", [_fs_resolver, _mapping_resolver])
+def test_interpret_kwargs_tuple_args(factory):
+    resolver = factory()
+    resolver._tuple_args = ("foo", "bar")
+    names = sorted(resolver._tuple_args)
+    kwargs = {
+        name: "first,second,third" for name in names
+    }
+
+    new, unused = resolver.interpret_kwargs(kwargs)
+
+    assert sorted(new) == names
+
+    if new:
+        assert set(new.values()) == {("first", "second", "third")}
+
+
+@pytest.mark.parametrize("passed, expected", [
+    ("1", 1),
+    ("0", 0),
+    ("true", 1),
+    ("false", 0),
+    ("on", 1),
+    ("off", 0),
+    ("yes", 1),
+    ("no", 0),
+])
+@pytest.mark.parametrize("factory", [
+    _fs_resolver,
+    _client_resolver,
+])
+def test_fsresolver_interpres_kwargs_bool_args(factory, passed, expected):
+    resolver = factory()
+    kwargs = {"read_only": passed}
+
+    new, unused = resolver.interpret_kwargs(kwargs)
+
+    assert new == {"read_only": expected}
+
+
+@pytest.mark.parametrize("uri, expected_args, expected_kwargs", [
+    ("file:///tmp/foo/bar", ("/tmp/foo/bar",), {}),
+    (
+        "file:///tmp/foo/bar?read_only=true",
+        ("/tmp/foo/bar",),
+        {"read_only": 1}
+    ),
+    (
+        "file://C:\\foo\\bar?read_only=true",
+        ("C:\\foo\\bar",),
+        {"read_only": 1}
+    ),
+    (
+        "file:///tmp/../foo/bar?read_only=true",
+        ("/foo/bar",),
+        {"read_only": 1}
+    ),
+])
+def test_fsresolver___call___mock_invoke_factory(
+    uri, expected_args, expected_kwargs,
+):
+    resolver = _fs_resolver()
+
+    factory, dbkw = resolver(uri)
+    assert dbkw == {}
+
+    with mock.patch("zodburi.resolvers.FileStorage") as fs_klass:
         factory()
-        FileStorage.assert_called_once_with('/tmp/foo/bar')
 
-    @mock.patch('zodburi.resolvers.FileStorage')
-    def test_call_abspath(self, FileStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('file:///tmp/foo/bar?read_only=true')
-        factory()
-        FileStorage.assert_called_once_with('/tmp/foo/bar', read_only=1)
+    fs_klass.assert_called_once_with(*expected_args, **expected_kwargs)
 
-    @mock.patch('zodburi.resolvers.FileStorage')
-    def test_call_abspath_windows(self, FileStorage):
-        resolver = self._makeOne()
+
+def test_fsresolver___call___check_dbkw():
+    resolver = _fs_resolver()
+    factory, dbkw = resolver(
+        "file:///tmp/foo/bar"
+        "?connection_pool_size=1"
+        "&connection_cache_size=1"
+        "&database_name=dbname"
+    )
+
+    assert dbkw == {
+        "connection_cache_size": "1",
+        "connection_pool_size": "1",
+        "database_name": "dbname",
+    }
+
+
+def test_fsresolver_invoke_factory(tmpdir):
+    fs_dir = pathlib.Path(tmpdir)
+    db_path = fs_dir / FS_FILENAME
+    resolver = _fs_resolver()
+
+    factory, dbkw = resolver(f"file://{tmpdir}/{FS_FILENAME}?quota=200")
+
+    assert dbkw == {}
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, FileStorage)
+        assert storage._quota == 200
+        assert db_path.exists()
+
+
+def test_fsresolver_invoke_factory_w_demostorage(tmpdir):
+    fs_dir = pathlib.Path(tmpdir)
+    db_path = fs_dir / FS_FILENAME
+    resolver = _fs_resolver()
+
+    with warnings.catch_warnings(record=True) as log:
         factory, dbkw = resolver(
-            'file://C:\\foo\\bar?read_only=true')
-        factory()
-        FileStorage.assert_called_once_with('C:\\foo\\bar', read_only=1)
+            f"file://{tmpdir}/{FS_FILENAME}?demostorage=true",
+        )
 
-    @mock.patch('zodburi.resolvers.FileStorage')
-    def test_call_normpath(self, FileStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('file:///tmp/../foo/bar?read_only=true')
-        factory()
-        FileStorage.assert_called_once_with('/foo/bar', read_only=1)
+    assert dbkw == {}
 
-    def test_invoke_factory_filestorage(self):
-        import os
-        from ZODB.FileStorage import FileStorage
-        self.assertFalse(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
-        resolver = self._makeOne()
-        factory, dbkw = resolver('file://%s/db.db?quota=200' % self.tmpdir)
-        storage = factory()
-        self.assertTrue(isinstance(storage, FileStorage))
-        try:
-            self.assertEqual(storage._quota, 200)
-            self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
-        finally:
-            storage.close()
+    warned, = log
+    assert issubclass(warned.category, DeprecationWarning)
+    assert (
+        "demostorage option is deprecated, use demo:// instead"
+        in str(warned.message)
+    )
 
-    def test_invoke_factory_demostorage(self):
-        import os
-        from ZODB.DemoStorage import DemoStorage
-        from ZODB.FileStorage import FileStorage
-        resolver = self._makeOne()
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            factory, dbkw = resolver(
-                'file://%s/db.db?demostorage=true' % self.tmpdir)
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-            self.assertIn("demostorage option is deprecated, use demo:// instead", str(w[-1].message))
-        storage = factory()
-        self.assertTrue(isinstance(storage, DemoStorage))
-        self.assertTrue(isinstance(storage.base, FileStorage))
-        try:
-            self.assertEqual(dbkw, {})
-            self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'db.db')))
-        finally:
-            storage.close()
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, DemoStorage)
+        assert isinstance(storage.base, FileStorage)
+        assert db_path.exists()
 
-    def test_invoke_factory_blobstorage(self):
-        import os
-        from ZODB.blob import BlobStorage
-        DB_FILE = os.path.join(self.tmpdir, 'db.db')
-        BLOB_DIR = os.path.join(self.tmpdir, 'blob')
-        self.assertFalse(os.path.exists(DB_FILE))
-        resolver = self._makeOne()
+
+def test_fsresolver_invoke_factory_w_blobstorage(tmpdir):
+    fs_dir = pathlib.Path(tmpdir)
+    db_path = fs_dir / FS_FILENAME
+    blob_dir = fs_dir / FS_BLOBDIR
+    quoted = quote(str(blob_dir))
+    resolver = _fs_resolver()
+
+    factory, dbkw = resolver(
+        f"file://{tmpdir}/{FS_FILENAME}?quota=200"
+        f"&blobstorage_dir={quoted}&blobstorage_layout=bushy"
+    )
+
+    assert dbkw == {}
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, BlobStorage)
+        assert blob_dir.exists()
+        assert db_path.exists()
+
+
+def test_fsresolver_invoke_factory_w_blobstorage_and_demostorage(tmpdir):
+    fs_dir = pathlib.Path(tmpdir)
+    db_path = fs_dir / FS_FILENAME
+    blob_dir = fs_dir / FS_BLOBDIR
+    quoted = quote(str(blob_dir))
+    resolver = _fs_resolver()
+
+    with warnings.catch_warnings(record=True) as log:
         factory, dbkw = resolver(
-            'file://%s/db.db?quota=200'
-            '&blobstorage_dir=%s/blob'
-            '&blobstorage_layout=bushy' % (self.tmpdir, quote(self.tmpdir)))
-        storage = factory()
-        self.assertTrue(isinstance(storage, BlobStorage))
-        try:
-            self.assertTrue(os.path.exists(DB_FILE))
-            self.assertTrue(os.path.exists(BLOB_DIR))
-        finally:
-            storage.close()
+            f"file://{tmpdir}/{FS_FILENAME}?quota=200&demostorage=true"
+            f"&blobstorage_dir={quoted}&blobstorage_layout=bushy"
+        )
 
-    def test_invoke_factory_blobstorage_and_demostorage(self):
-        import os
-        from ZODB.DemoStorage import DemoStorage
-        DB_FILE = os.path.join(self.tmpdir, 'db.db')
-        BLOB_DIR = os.path.join(self.tmpdir, 'blob')
-        self.assertFalse(os.path.exists(DB_FILE))
-        resolver = self._makeOne()
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            factory, dbkw = resolver(
-                'file://%s/db.db?quota=200&demostorage=true'
-                '&blobstorage_dir=%s/blob'
-                '&blobstorage_layout=bushy' % (
-                self.tmpdir, quote(
-                    self.tmpdir
-                )))
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-            self.assertIn("demostorage option is deprecated, use demo:// instead", str(w[-1].message))
-        storage = factory()
-        self.assertTrue(isinstance(storage, DemoStorage))
-        try:
-            self.assertTrue(os.path.exists(DB_FILE))
-            self.assertTrue(os.path.exists(BLOB_DIR))
-        finally:
-            storage.close()
+    assert dbkw == {}
 
-    def test_dbargs(self):
-        resolver = self._makeOne()
+    warned, = log
+    assert issubclass(warned.category, DeprecationWarning)
+    assert (
+        "demostorage option is deprecated, use demo:// instead"
+        in str(warned.message)
+    )
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, DemoStorage)
+        assert isinstance(storage.base, BlobStorage)
+        assert blob_dir.exists()
+        assert db_path.exists()
+
+
+@pytest.mark.parametrize("uri, expected_args, expected_kwargs", [
+    ("zeo://localhost", (("localhost", 9991),), {}),
+    ("zeo://localhost:8080?debug=true", (("localhost", 8080),), {"debug": 1}),
+    ("zeo://[::1]", (("::1", 9991),), {}),
+    ("zeo://[::1]:9990?debug=true", (("::1", 9990),), {"debug": 1}),
+    ("zeo:///var/sock?debug=true", ("/var/sock",), {"debug": 1}),
+    ("zeo:///var/nosuchfile?wait=false", ("/var/nosuchfile",), {"wait": 0}),
+    (
+        (
+            'zeo:///var/nosuchfile?'
+            'storage=main&'
+            'cache_size=1kb&'
+            'name=foo&'
+            'client=bar&'
+            'var=baz&'
+            'min_disconnect_poll=2&'
+            'max_disconnect_poll=3&'
+            'wait_for_server_on_startup=true&'
+            'wait=4&'
+            'wait_timeout=5&'
+            'read_only=6&'
+            'read_only_fallback=7&'
+            'drop_cache_rather_verify=true&'
+            'username=monty&'
+            'password=python&'
+            'realm=blat&'
+            'blob_dir=some/dir&'
+            'shared_blob_dir=true&'
+            'blob_cache_size=1kb&'
+            'blob_cache_size_check=8&'
+            'client_label=fink&'
+        ),
+        ('/var/nosuchfile',),
+        dict(
+            storage='main',
+            cache_size=1024,
+            name='foo',
+            client='bar',
+            var='baz',
+            min_disconnect_poll=2,
+            max_disconnect_poll=3,
+            wait_for_server_on_startup=1,
+            wait=4,
+            wait_timeout=5,
+            read_only=6,
+            read_only_fallback=7,
+            drop_cache_rather_verify=1,
+            username='monty',
+            password='python',
+            realm='blat',
+            blob_dir='some/dir',
+            shared_blob_dir=1,
+            blob_cache_size=1024,
+            blob_cache_size_check=8,
+            client_label='fink',
+        ),
+    ),
+])
+def test_client_resolver___call___(uri, expected_args, expected_kwargs):
+    resolver = _client_resolver()
+
+    factory, dbkw = resolver(uri)
+
+    assert dbkw == {}
+
+    with mock.patch("zodburi.resolvers.ClientStorage") as cs:
+        factory()
+
+    cs.assert_called_once_with(*expected_args, **expected_kwargs)
+
+def test_client_resolver___call___check_dbkw():
+    resolver = _client_resolver()
+
+    factory, dbkw = resolver(
+        "zeo://localhost:8080?"
+        "connection_pool_size=1&"
+        "connection_cache_size=1&"
+        "database_name=dbname"
+    )
+    assert dbkw == {
+        "connection_pool_size": "1",
+        "connection_cache_size": "1",
+        "database_name": "dbname",
+    }
+
+
+def test_client_resolver_invoke_factory():
+    resolver = _client_resolver()
+
+    factory, dbkw = resolver("zeo:///var/nosouchfile?wait=false")
+    assert dbkw == {}
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, ClientStorage)
+        # Stub out the storage's server to allow close to complete.
+        storage._server = mock.Mock(spec_set=("close",))
+
+
+def test_client_resolver_invoke_factory_w_demostorage():
+    resolver = _client_resolver()
+
+    with warnings.catch_warnings(record=True) as log:
         factory, dbkw = resolver(
-            'file:///tmp/../foo/bar?connection_pool_size=1'
-             '&connection_cache_size=1&database_name=dbname')
-        self.assertEqual(dbkw, {'connection_cache_size': '1',
-                                'connection_pool_size': '1',
-                                'database_name': 'dbname'})
+            f"zeo:///var/nosuchfile?demostorage=true&wait=false",
+        )
+
+    assert dbkw == {}
+
+    warned, = log
+    assert issubclass(warned.category, DeprecationWarning)
+    assert (
+        "demostorage option is deprecated, use demo:// instead"
+        in str(warned.message)
+    )
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, DemoStorage)
+        assert isinstance(storage.base, ClientStorage)
+        # Stub out the storage's server to allow close to complete.
+        storage.base._server = mock.Mock(spec_set=("close",))
 
 
-class TestClientStorageURIResolver(unittest.TestCase):
-    def _getTargetClass(self):
-        from zodburi.resolvers import ClientStorageURIResolver
-        return ClientStorageURIResolver
+def test_zconfig_resolver___call___check_dbkw(zconfig_path):
+    zconfig_path.write_text(
+        """\
+<mappingstorage>
+</mappingstorage>
+"""
+    )
+    resolver = _zconfig_resolver()
+    factory, dbkw = resolver(f"zconfig://{zconfig_path}?foo=bar")
 
-    def _makeOne(self):
-        klass = self._getTargetClass()
-        return klass()
-
-    def test_bool_args(self):
-        resolver = self._makeOne()
-        f = resolver.interpret_kwargs
-        kwargs = f({'read_only':'1'})
-        self.assertEqual(kwargs[0], {'read_only':1})
-        kwargs = f({'read_only':'true'})
-        self.assertEqual(kwargs[0], {'read_only':1})
-        kwargs = f({'read_only':'on'})
-        self.assertEqual(kwargs[0], {'read_only':1})
-        kwargs = f({'read_only':'off'})
-        self.assertEqual(kwargs[0], {'read_only':0})
-        kwargs = f({'read_only':'no'})
-        self.assertEqual(kwargs[0], {'read_only':0})
-        kwargs = f({'read_only':'false'})
-        self.assertEqual(kwargs[0], {'read_only':0})
-
-    @mock.patch('zodburi.resolvers.ClientStorage')
-    def test_call_tcp_no_port(self, ClientStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zeo://localhost?debug=true')
-        factory()
-        ClientStorage.assert_called_once_with(('localhost', 9991), debug=1)
-
-    @mock.patch('zodburi.resolvers.ClientStorage')
-    def test_call_tcp(self, ClientStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zeo://localhost:8080?debug=true')
-        factory()
-        ClientStorage.assert_called_once_with(('localhost', 8080), debug=1)
-
-    @mock.patch('zodburi.resolvers.ClientStorage')
-    def test_call_ipv6_no_port(self, ClientStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zeo://[::1]?debug=true')
-        factory()
-        ClientStorage.assert_called_once_with(('::1', 9991), debug=1)
-
-    @mock.patch('zodburi.resolvers.ClientStorage')
-    def test_call_ipv6(self, ClientStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zeo://[::1]:9090?debug=true')
-        factory()
-        ClientStorage.assert_called_once_with(('::1', 9090), debug=1)
-
-    @mock.patch('zodburi.resolvers.ClientStorage')
-    def test_call_unix(self, ClientStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zeo:///var/sock?debug=true')
-        factory()
-        ClientStorage.assert_called_once_with('/var/sock', debug=1)
-
-    @mock.patch('zodburi.resolvers.ClientStorage')
-    def test_invoke_factory(self, ClientStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false')
-        storage = factory()
-        storage.close()
-        ClientStorage.assert_called_once_with('/var/nosuchfile', wait=0)
-
-    @mock.patch('zodburi.resolvers.ClientStorage')
-    def test_factory_kwargs(self, ClientStorage):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zeo:///var/nosuchfile?'
-                                 'storage=main&'
-                                 'cache_size=1kb&'
-                                 'name=foo&'
-                                 'client=bar&'
-                                 'var=baz&'
-                                 'min_disconnect_poll=2&'
-                                 'max_disconnect_poll=3&'
-                                 'wait_for_server_on_startup=true&'
-                                 'wait=4&'
-                                 'wait_timeout=5&'
-                                 'read_only=6&'
-                                 'read_only_fallback=7&'
-                                 'drop_cache_rather_verify=true&'
-                                 'username=monty&'
-                                 'password=python&'
-                                 'realm=blat&'
-                                 'blob_dir=some/dir&'
-                                 'shared_blob_dir=true&'
-                                 'blob_cache_size=1kb&'
-                                 'blob_cache_size_check=8&'
-                                 'client_label=fink&'
-                                 )
-        storage = factory()
-        storage.close()
-        ClientStorage.assert_called_once_with('/var/nosuchfile',
-                                              storage='main',
-                                              cache_size=1024,
-                                              name='foo',
-                                              client='bar',
-                                              var='baz',
-                                              min_disconnect_poll=2,
-                                              max_disconnect_poll=3,
-                                              wait_for_server_on_startup=1,
-                                              wait=4,
-                                              wait_timeout=5,
-                                              read_only=6,
-                                              read_only_fallback=7,
-                                              drop_cache_rather_verify=1,
-                                              username='monty',
-                                              password='python',
-                                              realm='blat',
-                                              blob_dir='some/dir',
-                                              shared_blob_dir=1,
-                                              blob_cache_size=1024,
-                                              blob_cache_size_check=8,
-                                              client_label='fink',
-                                              )
+    assert dbkw == {"foo": "bar"}
 
 
-    @mock.patch('zodburi.resolvers.ClientStorage')
-    def test_invoke_factory_demostorage(self, ClientStorage):
-        from ZODB.DemoStorage import DemoStorage
-        resolver = self._makeOne()
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            factory, dbkw = resolver('zeo:///var/nosuchfile?wait=false'
-                                     '&demostorage=true')
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-            self.assertIn("demostorage option is deprecated, use demo:// instead", str(w[-1].message))
-        storage = factory()
-        storage.close()
-        self.assertTrue(isinstance(storage, DemoStorage))
-
-    def test_dbargs(self):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zeo://localhost:8080?debug=true&'
-                                 'connection_pool_size=1&'
-                                 'connection_cache_size=1&'
-                                 'database_name=dbname')
-        self.assertEqual(dbkw, {'connection_pool_size': '1',
-                                'connection_cache_size': '1',
-                                'database_name': 'dbname'})
+def test_zconfig_resolver___call___w_unknown_storage(zconfig_path):
+    zconfig_path.write_text(
+        """\
+<mappingstorage x>
+</mappingstorage>
+"""
+    )
+    resolver = _zconfig_resolver()
+    with pytest.raises(KeyError):
+        resolver(f"zconfig://{zconfig_path}#y")
 
 
-class TestZConfigURIResolver(unittest.TestCase):
-    def _getTargetClass(self):
-        from zodburi.resolvers import ZConfigURIResolver
-        return ZConfigURIResolver
 
-    def _makeOne(self):
-        klass = self._getTargetClass()
-        return klass()
+def test_zconfig_resolver_invoke_factory_w_named_storage(zconfig_path):
+    zconfig_path.write_text(
+        """\
+<demostorage foo>
+</demostorage>
 
-    def setUp(self):
-        import tempfile
-        self.tmp = tempfile.NamedTemporaryFile()
+<mappingstorage bar>
+</mappingstorage>
+"""
+    )
+    resolver = _zconfig_resolver()
+    factory, dbkw = resolver(f"zconfig://{zconfig_path}#bar")
 
-    def tearDown(self):
-        self.tmp.close()
+    assert dbkw == {}
 
-    def test_named_storage(self):
-        self.tmp.write(b"""
-        <demostorage foo>
-        </demostorage>
-
-        <mappingstorage bar>
-        </mappingstorage>
-        """)
-        self.tmp.flush()
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zconfig://%s#bar' % self.tmp.name)
-        storage = factory()
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(storage, MappingStorage), storage)
-
-    def test_anonymous_storage(self):
-        self.tmp.write(b"""
-        <mappingstorage>
-        </mappingstorage>
-
-        <demostorage demo>
-        </demostorage>
-        """)
-        self.tmp.flush()
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zconfig://%s' % self.tmp.name)
-        storage = factory()
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(storage, MappingStorage))
-        self.assertEqual(dbkw, {})
-
-    def test_query_string_args(self):
-        self.tmp.write(b"""
-        <mappingstorage>
-        </mappingstorage>
-
-        <demostorage demo>
-        </demostorage>
-        """)
-        self.tmp.flush()
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zconfig://%s?foo=bar' % self.tmp.name)
-        self.assertEqual(dbkw, {'foo': 'bar'})
-
-    def test_storage_not_found(self):
-        self.tmp.write(b"""
-        <mappingstorage x>
-        </mappingstorage>
-        """)
-        self.tmp.flush()
-        resolver = self._makeOne()
-        self.assertRaises(KeyError, resolver, 'zconfig://%s#y' % self.tmp.name)
-
-    def test_anonymous_database(self):
-        self.tmp.write(b"""
-        <zodb>
-          <mappingstorage>
-          </mappingstorage>
-        </zodb>
-        """)
-        self.tmp.flush()
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zconfig://%s' % self.tmp.name)
-        storage = factory()
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(storage, MappingStorage))
-        self.assertEqual(dbkw,
-                         {'connection_cache_size': 5000,
-                          'connection_cache_size_bytes': 0,
-                          'connection_historical_cache_size': 1000,
-                          'connection_historical_cache_size_bytes': 0,
-                          'connection_historical_pool_size': 3,
-                          'connection_historical_timeout': 300,
-                          'connection_large_record_size': 16777216,
-                          'connection_pool_size': 7})
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, MappingStorage)
 
 
-    def test_named_database(self):
-        self.tmp.write(b"""
-        <zodb x>
-          <mappingstorage>
-          </mappingstorage>
-          database-name foo
-          cache-size 20000
-          pool-size 5
-        </zodb>
-        """)
-        self.tmp.flush()
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zconfig://%s#x' % self.tmp.name)
-        storage = factory()
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(storage, MappingStorage))
-        self.assertEqual(dbkw,
-                         {'connection_cache_size': 20000,
-                          'connection_cache_size_bytes': 0,
-                          'connection_historical_cache_size': 1000,
-                          'connection_historical_cache_size_bytes': 0,
-                          'connection_historical_pool_size': 3,
-                          'connection_historical_timeout': 300,
-                          'connection_large_record_size': 16777216,
-                          'connection_pool_size': 5,
-                          'database_name': 'foo'})
+def test_zconfig_resolver_invoke_factory_w_anonymous_storage(zconfig_path):
+    zconfig_path.write_text(
+        """\
+<mappingstorage>
+</mappingstorage>
+
+<demostorage demo>
+</demostorage>
+"""
+    )
+    resolver = _zconfig_resolver()
+    factory, dbkw = resolver(f"zconfig://{zconfig_path}")
+
+    assert dbkw == {}
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, MappingStorage)
 
 
-    def test_database_all_options(self):
-        from zodburi import CONNECTION_PARAMETERS, BYTES_PARAMETERS
-        self.tmp.write(("""
-        <zodb x>
-          <mappingstorage>
-          </mappingstorage>
-          database-name foo
-          %s
-        </zodb>
-        """ % '\n'.join("{} {}".format(
-                            name.replace('_', '-'),
-                            '%sMB' % i if name in BYTES_PARAMETERS else i,
-                           )
-                        for (i, name)
-                        in enumerate(CONNECTION_PARAMETERS)
-                        )).encode())
-        self.tmp.flush()
-        resolver = self._makeOne()
-        factory, dbkw = resolver('zconfig://%s#x' % self.tmp.name)
-        storage = factory()
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(storage, MappingStorage))
-        expect = dict(database_name='foo')
-        for i, parameter in enumerate(CONNECTION_PARAMETERS):
-            cparameter = 'connection_' + parameter
-            expect[cparameter] = i
-            if parameter in BYTES_PARAMETERS:
-                expect[cparameter] *= 1<<20
-        self.assertEqual(dbkw, expect)
+def test_zconfig_resolver_invoke_factory_w_anon_db_w_defaults(zconfig_path):
+    zconfig_path.write_text(
+        """\
+<zodb>
+ <mappingstorage>
+ </mappingstorage>
+</zodb>
+"""
+    )
+    resolver = _zconfig_resolver()
+    factory, dbkw = resolver(f"zconfig://{zconfig_path}")
 
-    def test_database_integration_because_ints(self):
-        from zodburi import resolve_uri
-        self.tmp.write(b"""
-        <zodb>
-          <mappingstorage>
-          </mappingstorage>
-        </zodb>
-        """)
-        self.tmp.flush()
-        from zodburi import resolve_uri
-        factory, dbkw = resolve_uri('zconfig://%s' % self.tmp.name)
-        storage = factory()
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(storage, MappingStorage))
-        self.assertEqual(dbkw,
-                         {'cache_size': 5000,
-                          'cache_size_bytes': 0,
-                          'historical_cache_size': 1000,
-                          'historical_cache_size_bytes': 0,
-                          'historical_pool_size': 3,
-                          'historical_timeout': 300,
-                          'large_record_size': 16777216,
-                          'pool_size': 7,
-                          'database_name': 'unnamed'})
+    assert dbkw == {
+        "connection_cache_size": 5000,
+        "connection_cache_size_bytes": 0,
+        "connection_historical_cache_size": 1000,
+        "connection_historical_cache_size_bytes": 0,
+        "connection_historical_pool_size": 3,
+        "connection_historical_timeout": 300,
+        "connection_large_record_size": 16777216,
+        "connection_pool_size": 7,
+    }
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, MappingStorage)
 
 
-class TestMappingStorageURIResolver(Base, unittest.TestCase):
+def test_zconfig_resolver_invoke_factory_w_named_db_w_explicit(zconfig_path):
+    zconfig_path.write_text(
+        """\
+<zodb x>
+ <mappingstorage>
+ </mappingstorage>
 
-    def _getTargetClass(self):
-        from zodburi.resolvers import MappingStorageURIResolver
-        return MappingStorageURIResolver
+ database-name foo
+ cache-size 20000
+ pool-size 5
+</zodb>
+"""
+    )
+    resolver = _zconfig_resolver()
+    factory, dbkw = resolver(f"zconfig://{zconfig_path}#x")
 
-    def _makeOne(self):
-        klass = self._getTargetClass()
-        return klass()
+    assert dbkw == {
+        "database_name": "foo",
+        "connection_cache_size": 20000,
+        "connection_cache_size_bytes": 0,
+        "connection_historical_cache_size": 1000,
+        "connection_historical_cache_size_bytes": 0,
+        "connection_historical_pool_size": 3,
+        "connection_historical_timeout": 300,
+        "connection_large_record_size": 16777216,
+        "connection_pool_size": 5,
+    }
 
-    def test_call_no_qs(self):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('memory://')
-        self.assertEqual(dbkw, {})
-        storage = factory()
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(storage, MappingStorage))
-        self.assertEqual(storage.__name__, '')
-
-    def test_call_with_qs(self):
-        uri='memory://storagename?connection_cache_size=100&database_name=fleeb'
-        resolver = self._makeOne()
-        factory, dbkw = resolver(uri)
-        self.assertEqual(dbkw, {'connection_cache_size': '100',
-                                'database_name': 'fleeb'})
-        storage = factory()
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(storage, MappingStorage))
-        self.assertEqual(storage.__name__, 'storagename')
-
-
-class TestDemoStorageURIResolver(unittest.TestCase):
-
-    def _getTargetClass(self):
-        from zodburi.resolvers import DemoStorageURIResolver
-        return DemoStorageURIResolver
-
-    def _makeOne(self):
-        klass = self._getTargetClass()
-        return klass()
-
-    def test_invalid_uri_no_match(self):
-        from zodburi.resolvers import InvalidDemoStorgeURI
-        resolver = self._makeOne()
-
-        with pytest.raises(InvalidDemoStorgeURI):
-            resolver("bogus:name")
-
-    def test_invalid_uri_kwargs_in_base(self):
-        from zodburi.resolvers import InvalidDemoStorgeURI
-        resolver = self._makeOne()
-
-        with pytest.raises(InvalidDemoStorgeURI):
-            resolver(
-                "demo:"
-                "(file:///tmp/blah?pool_size=1234)/"
-                "(file:///tmp/qux)"
-            )
-
-    def test_invalid_uri_kwargs_in_changes(self):
-        from zodburi.resolvers import InvalidDemoStorgeURI
-        resolver = self._makeOne()
-
-        with pytest.raises(InvalidDemoStorgeURI):
-            resolver(
-                "demo:"
-                "(file:///tmp/blah)/"
-                "(file:///tmp/qux?pool_size=1234)"
-            )
-
-    def test_fsoverlay(self):
-        import os.path, tempfile, shutil
-        tmpdir = tempfile.mkdtemp()
-        def _():
-            shutil.rmtree(tmpdir)
-        self.addCleanup(_)
-
-        resolver = self._makeOne()
-        basef   = os.path.join(tmpdir, 'base.fs')
-        changef = os.path.join(tmpdir, 'changes.fs')
-        self.assertFalse(os.path.exists(basef))
-        self.assertFalse(os.path.exists(changef))
-        factory, dbkw = resolver('demo:(file://{})/(file://{}?quota=200)'.format(basef, changef))
-        self.assertEqual(dbkw, {})
-        demo = factory()
-        from ZODB.DemoStorage import DemoStorage
-        from ZODB.FileStorage import FileStorage
-        self.assertTrue(isinstance(demo, DemoStorage))
-        self.assertTrue(isinstance(demo.base, FileStorage))
-        self.assertTrue(isinstance(demo.changes, FileStorage))
-        self.assertTrue(os.path.exists(basef))
-        self.assertTrue(os.path.exists(changef))
-        self.assertEqual(demo.changes._quota, 200)
-
-    def test_parse_frag(self):
-        resolver = self._makeOne()
-        factory, dbkw = resolver('demo:(memory://111)/(memory://222)#foo=bar&abc=def')
-        self.assertEqual(dbkw, {'foo': 'bar', 'abc': 'def'})
-        demo = factory()
-        from ZODB.DemoStorage import DemoStorage
-        from ZODB.MappingStorage import MappingStorage
-        self.assertTrue(isinstance(demo, DemoStorage))
-        self.assertTrue(isinstance(demo.base, MappingStorage))
-        self.assertEqual(demo.base.__name__, '111')
-        self.assertTrue(isinstance(demo.changes, MappingStorage))
-        self.assertEqual(demo.changes.__name__, '222')
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, MappingStorage)
 
 
-class TestEntryPoints(unittest.TestCase):
+def test_zconfig_resolver_invoke_factory_w_all_options(zconfig_path):
+    from zodburi import CONNECTION_PARAMETERS, BYTES_PARAMETERS
 
-    def test_it(self):
-        from zodburi import resolvers
+    all_params = [
+        (
+            name.replace("_", "-"),
+            "%sMB" % i if name in BYTES_PARAMETERS else str(i),
+        )
+        for (i, name) in enumerate(CONNECTION_PARAMETERS)
+    ]
+    params_str = "\n".join(
+        [f"{name} {value}" for name, value in all_params]
+    )
+    zconfig_path.write_text(
+        f"""\
+<zodb x>
+<mappingstorage>
+</mappingstorage>
+database-name foo
+{params_str}
+</zodb>
+"""
+    )
+    resolver = _zconfig_resolver()
+    factory, dbkw = resolver(f"zconfig://{zconfig_path}#x")
 
-        our_eps = {
-            ep.name: ep for ep in distribution("zodburi").entry_points
-        }
-        expected = [
-            ('memory', resolvers.MappingStorageURIResolver),
-            ('zeo', resolvers.ClientStorageURIResolver),
-            ('file', resolvers.FileStorageURIResolver),
-            ('zconfig', resolvers.ZConfigURIResolver),
-            ('demo', resolvers.DemoStorageURIResolver),
-        ]
-        for name, cls in expected:
-            target = our_eps[name].load()
-            self.assertTrue(isinstance(target, cls))
+    expected = {"database_name": "foo"}
+
+    for i, parameter in enumerate(CONNECTION_PARAMETERS):
+        cparameter = f"connection_{parameter}"
+
+        if parameter in BYTES_PARAMETERS:
+            expected[cparameter] = i * 1024 * 1024
+        else:
+            expected[cparameter] = i
+
+    assert dbkw == expected
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, MappingStorage)
+
+
+
+def test_resolve_uri_w_zconfig(zconfig_path):
+    from zodburi import resolve_uri
+
+    zconfig_path.write_text("""\
+<zodb>
+ <mappingstorage>
+ </mappingstorage>
+</zodb>
+"""
+    )
+    factory, dbkw = resolve_uri(f"zconfig://{zconfig_path}")
+
+    assert dbkw == {
+        "cache_size": 5000,
+        "cache_size_bytes": 0,
+        "historical_cache_size": 1000,
+        "historical_cache_size_bytes": 0,
+        "historical_pool_size": 3,
+        "historical_timeout": 300,
+        "large_record_size": 16777216,
+        "pool_size": 7,
+        "database_name": "unnamed",
+    }
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, MappingStorage)
+
+
+def test_mapping_resolver_wo_qs():
+    resolver = _mapping_resolver()
+
+    factory, dbkw = resolver("memory://")
+
+    assert dbkw == {}
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, MappingStorage)
+        assert storage.__name__ == ""
+
+
+def test_mapping_resolver_w_qs():
+    resolver = _mapping_resolver()
+
+    factory, dbkw = resolver(
+        "memory://storagename?connection_cache_size=100&database_name=fleeb"
+    )
+
+    assert dbkw == {
+        "connection_cache_size": "100",
+        "database_name": "fleeb"
+    }
+
+    with contextlib.closing(factory()) as storage:
+        assert isinstance(storage, MappingStorage)
+        assert storage.__name__ == "storagename"
+
+
+def test_demo_resolver_w_invalid_uri_no_match():
+    from zodburi.resolvers import InvalidDemoStorgeURI
+
+    resolver = _demo_resolver()
+
+    with pytest.raises(InvalidDemoStorgeURI):
+        resolver("bogus:name")
+
+
+def test_demo_resolver_w_invalid_uri_kwargs_in_base():
+    from zodburi.resolvers import InvalidDemoStorgeURI
+
+    resolver = _demo_resolver()
+
+    with pytest.raises(InvalidDemoStorgeURI):
+        resolver(
+            "demo:"
+            "(file:///tmp/blah?pool_size=1234)/"
+            "(file:///tmp/qux)"
+        )
+
+
+def test_demo_resolver_w_invalid_uri_kwargs_in_changes():
+    from zodburi.resolvers import InvalidDemoStorgeURI
+
+    resolver = _demo_resolver()
+
+    with pytest.raises(InvalidDemoStorgeURI):
+        resolver(
+            "demo:"
+            "(file:///tmp/blah)/"
+            "(file:///tmp/qux?pool_size=1234)"
+        )
+
+
+def test_demo_resolver_invoke_factory_w_fs_overlay(tmpdir):
+    fs_dir = pathlib.Path(tmpdir)
+    base_path = fs_dir / "base.fs"
+    changes_path = fs_dir / "changes.fs"
+    assert not base_path.exists()
+    assert not changes_path.exists()
+    demo_uri = (
+        f"demo:"
+        f"(file://{base_path})/"
+        f"(file://{changes_path}"
+        f"?quota=200)"
+    )
+
+    resolver = _demo_resolver()
+
+    factory, dbkw = resolver(demo_uri)
+
+    assert dbkw == {}
+
+    with contextlib.closing(factory()) as demo:
+        assert isinstance(demo, DemoStorage)
+        assert isinstance(demo.base, FileStorage)
+        assert isinstance(demo.changes, FileStorage)
+        assert base_path.exists()
+        assert changes_path.exists()
+        assert demo.changes._quota == 200
+
+
+def test_demo_resolver_invoke_factory_w_qs_parms(tmpdir):
+    fs_dir = pathlib.Path(tmpdir)
+    base_path = fs_dir / "base.fs"
+    changes_path = fs_dir / "changes.fs"
+    assert not base_path.exists()
+    assert not changes_path.exists()
+    demo_uri = "demo:(memory://111)/(memory://222)#foo=bar&abc=def"
+
+    resolver = _demo_resolver()
+
+    factory, dbkw = resolver(demo_uri)
+
+    assert dbkw == {'foo': 'bar', 'abc': 'def'}
+
+    with contextlib.closing(factory()) as demo:
+        assert isinstance(demo, DemoStorage)
+        assert isinstance(demo.base, MappingStorage)
+        demo.base.__name__ == '111'
+        assert isinstance(demo.changes, MappingStorage)
+        assert demo.changes.__name__ == '222'
+
+
+def test_entry_points():
+    from zodburi import resolvers
+
+    our_eps = {
+        ep.name: ep for ep in distribution("zodburi").entry_points
+    }
+    expected = [
+        ('memory', resolvers.MappingStorageURIResolver),
+        ('zeo', resolvers.ClientStorageURIResolver),
+        ('file', resolvers.FileStorageURIResolver),
+        ('zconfig', resolvers.ZConfigURIResolver),
+        ('demo', resolvers.DemoStorageURIResolver),
+    ]
+    for name, cls in expected:
+        target = our_eps[name].load()
+        assert isinstance(target, cls)

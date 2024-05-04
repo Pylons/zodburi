@@ -14,36 +14,40 @@ CONNECTION_PARAMETERS = (
 )
 
 BYTES_PARAMETERS = (
-    'cache_size_bytes',
-    'historical_cache_size_bytes',
-    'large_record_size'
+    "cache_size_bytes",
+    "historical_cache_size_bytes",
+    "large_record_size"
 )
 
 PARAMETERS = dict(
-    [('database_name', 'database_name')] +
-    [(f'connection_{parm}', parm) for parm in CONNECTION_PARAMETERS]
+    [("database_name", "database_name")] +
+    [(f"connection_{parm}", parm) for parm in CONNECTION_PARAMETERS]
 )
 
-HAS_UNITS_RE = re.compile(r'\s*(\d+)\s*([kmg])b\s*$')
+HAS_UNITS_RE = re.compile(r"\s*(\d+)\s*([kmg])b\s*$")
 UNITS = dict(k=1<<10, m=1<<20, g=1<<30)
 
+
 _DEFAULT_DBKW = {
-    'cache_size': 10000,
-    'pool_size': 7,
-    'database_name': 'unnamed',
+    "cache_size": 10000,
+    "pool_size": 7,
+    "database_name": "unnamed",
 }
+
 
 class NoResolverForScheme(KeyError):
     def __init__(self, uri):
         self.uri = uri
-        super().__init__(f'No resolver found for uri: {uri}')
+        super().__init__(f"No resolver found for uri: {uri}")
+
 
 class UnknownDatabaseKeywords(KeyError):
     def __init__(self, kw):
         self.kw = kw
         super().__init__(
-            f'Unrecognized database keyword(s): {", ".join(kw)}'
+            f"Unrecognized database keyword(s): {", ".join(kw)}"
         )
+
 
 def resolve_uri(uri):
     """
@@ -54,9 +58,10 @@ def resolve_uri(uri):
     factory, dbkw = _resolve_uri(uri)
     return factory, _get_dbkw(dbkw)
 
+
 # _resolve_uri serves resolve_uri: it returns factory and original raw dbkw.
 def _resolve_uri(uri):
-    scheme = uri[:uri.find(':')]
+    scheme = uri[:uri.find(":")]
     try:
         resolver_eps = entry_points(group="zodburi.resolvers")
     except TypeError:  # pragma: NO COVER Python < 3.10
@@ -70,13 +75,16 @@ def _resolve_uri(uri):
     else:
         raise NoResolverForScheme(uri)
 
+
 def _parse_bytes(s):
     m = HAS_UNITS_RE.match(s.lower())
+
     if m:
         v, uname = m.group(1, 2)
         return int(v) * UNITS[uname]
     else:
         return int(s)
+
 
 def _get_dbkw(kw):
     dbkw = _DEFAULT_DBKW.copy()
@@ -84,7 +92,7 @@ def _get_dbkw(kw):
     for parameter in PARAMETERS:
         if parameter in kw:
             v = kw.pop(parameter)
-            if parameter.startswith('connection_'):
+            if parameter.startswith("connection_"):
                 if not isinstance(v, int):
                     if PARAMETERS[parameter] in BYTES_PARAMETERS:
                         v = _parse_bytes(v)

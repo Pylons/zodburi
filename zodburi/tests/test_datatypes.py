@@ -1,102 +1,126 @@
 import unittest
 
+import pytest
+
 _marker = object()
-class SuffixMultiplierTests(unittest.TestCase):
-
-    def _getTargetClass(self):
-        from zodburi.datatypes import SuffixMultiplier
-        return SuffixMultiplier
-
-    def _makeOne(self, d=None, default=_marker):
-        if d is None:
-            d = {}
-        if default is _marker:
-            return self._getTargetClass()(d)
-        return self._getTargetClass()(d, default)
-
-    def test_ctor_simple(self):
-        sm = self._makeOne()
-        self.assertEqual(sm._d, {})
-        self.assertEqual(sm._default, 1)
-        self.assertEqual(sm._keysz, None)
-
-    def test_ctor_w_explicit_default(self):
-        sm = self._makeOne(default=3)
-        self.assertEqual(sm._default, 3)
-
-    def test_ctor_w_normal_suffixes(self):
-        SFX = {'aaa': 2, 'bbb': 3}
-        sm = self._makeOne(SFX)
-        self.assertEqual(sm._d, SFX)
-        self.assertEqual(sm._default, 1)
-        self.assertEqual(sm._keysz, 3)
-
-    def test_ctor_w_mismatched_suffixes(self):
-        SFX = {'aaa': 2, 'bbbb': 3}
-        self.assertRaises(ValueError, self._makeOne, SFX)
-
-    def test___call____miss(self):
-        SFX = {'aaa': 2, 'bbb': 3}
-        sm = self._makeOne(SFX)
-        self.assertEqual(sm('14'), 14)
-
-    def test___call____hit(self):
-        SFX = {'aaa': 2, 'bbb': 3}
-        sm = self._makeOne(SFX)
-        self.assertEqual(sm('14bbb'), 42)
 
 
-class Test_convert_bytesize(unittest.TestCase):
+def _suffix_multiplier(d=None, default=_marker):
+    from zodburi.datatypes import SuffixMultiplier
 
-    def _callFUT(self, value):
-        from zodburi.datatypes import convert_bytesize
-        return convert_bytesize(value)
+    if d is None:
+        d = {}
 
-    def test_hit(self):
-        self.assertEqual(self._callFUT('14kb'), 14 * 1024)
-        self.assertEqual(self._callFUT('14mb'), 14 * 1024 * 1024)
-        self.assertEqual(self._callFUT('14gb'), 14 * 1024 * 1024 * 1024)
+    if default is _marker:
+        return SuffixMultiplier(d)
 
-    def test_miss(self):
-        self.assertEqual(self._callFUT('14'), 14)
+    return SuffixMultiplier(d, default)
 
 
-class Test_convert_int(unittest.TestCase):
-
-    def _callFUT(self, value):
-        from zodburi.datatypes import convert_int
-        return convert_int(value)
-
-    def test_hit_falsetypes(self):
-        from zodburi.datatypes import FALSETYPES
-        for v in FALSETYPES:
-            self.assertEqual(self._callFUT(v), 0)
-            self.assertEqual(self._callFUT(v.title()), 0)
-
-    def test_hit_truetypes(self):
-        from zodburi.datatypes import TRUETYPES
-        for v in TRUETYPES:
-            self.assertEqual(self._callFUT(v), 1)
-            self.assertEqual(self._callFUT(v.title()), 1)
-
-    def test_hit_normal(self):
-        self.assertEqual(self._callFUT('14'), 14)
-
-    def test_miss(self):
-        self.assertRaises(ValueError, self._callFUT, 'notanint')
+def test_suffixmultiplier___init___w_defaults():
+    sm = _suffix_multiplier()
+    assert sm._d == {}
+    assert sm._default == 1
+    assert sm._keysz == 0
 
 
-class Test_convert_tuple(unittest.TestCase):
+def test_suffixmultiplier___init___w_explicit_default():
+    sm = _suffix_multiplier(default=3)
+    assert sm._d == {}
+    assert sm._default == 3
+    assert sm._keysz == 0
 
-    def _callFUT(self, value):
-        from zodburi.datatypes import convert_tuple
-        return convert_tuple(value)
 
-    def test_empty(self):
-        self.assertEqual(self._callFUT(''), ('',))
+def test_suffixmultiplier___init___w_normal_suffixes():
+    SFX = {"aaa": 2, "bbb": 3}
+    sm = _suffix_multiplier(SFX)
+    assert sm._d == SFX
+    assert sm._default == 1
+    assert sm._keysz == 3
 
-    def test_wo_commas(self):
-        self.assertEqual(self._callFUT('abc'), ('abc',))
 
-    def test_w_commas(self):
-        self.assertEqual(self._callFUT('abc,def'), ('abc', 'def'))
+def test_suffixmultiplier___init___w_mismatched_suffixes():
+    SFX = {"aaa": 2, "bbbb": 3}
+
+    with pytest.raises(ValueError):
+        _suffix_multiplier(SFX)
+
+
+def test_suffixmultiplier___call____miss():
+    SFX = {"aaa": 2, "bbb": 3}
+    sm = _suffix_multiplier(SFX)
+    assert sm("14") == 14
+
+
+def test_suffixmultiplier___call___hit():
+    SFX = {"aaa": 2, "bbb": 3}
+    sm = _suffix_multiplier(SFX)
+    assert sm("14bbb") == 42
+
+
+def test_convert_bytesize_miss():
+    from zodburi.datatypes import convert_bytesize
+
+    assert convert_bytesize("14") == 14
+
+
+@pytest.mark.parametrize("sized, expected", [
+    ("14", 14),
+    ("200", 200),
+    ("14kb", 14 * 1024),
+    ("14mb", 14 * 1024 * 1024),
+    ("14gb", 14 * 1024 * 1024 * 1024),
+])
+def test_convert_bytesize_hit(sized, expected):
+    from zodburi.datatypes import convert_bytesize
+
+    assert convert_bytesize(sized) == expected
+
+
+def test_convert_int_w_falsetypes():
+    from zodburi.datatypes import convert_int
+    from zodburi.datatypes import FALSETYPES
+
+    for v in FALSETYPES:
+        assert convert_int(v) == 0
+        assert convert_int(v.title()) == 0
+
+
+def test_convert_int_w_truetypes():
+    from zodburi.datatypes import convert_int
+    from zodburi.datatypes import TRUETYPES
+
+    for v in TRUETYPES:
+        assert convert_int(v) == 1
+        assert convert_int(v.title()) == 1
+
+
+def test_convert_int_w_normal():
+    from zodburi.datatypes import convert_int
+
+    assert convert_int("14") == 14
+
+
+def test_convert_int_w_invalid():
+    from zodburi.datatypes import convert_int
+
+    with pytest.raises(ValueError):
+        convert_int("notanint")
+
+
+def test_convert_tuple_w_empty():
+    from zodburi.datatypes import convert_tuple
+
+    assert convert_tuple("") == ("",)
+
+
+def test_convert_tuple_wo_commas():
+    from zodburi.datatypes import convert_tuple
+
+    assert convert_tuple("abc") == ("abc",)
+
+
+def test_convert_tuple_w_commas():
+    from zodburi.datatypes import convert_tuple
+
+    assert convert_tuple("abc,def") == ("abc", "def")
