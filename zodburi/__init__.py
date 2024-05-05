@@ -45,7 +45,7 @@ class UnknownDatabaseKeywords(KeyError):
     def __init__(self, kw):
         self.kw = kw
         super().__init__(
-            f"Unrecognized database keyword(s): {", ".join(kw)}"
+            f"Unrecognized database keyword(s): {', '.join(kw)}"
         )
 
 
