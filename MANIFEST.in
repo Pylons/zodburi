@@ -9,8 +9,6 @@ include contributing.md
 include CONTRIBUTORS.txt
 include COPYRIGHT.txt
 include LICENSE.txt
-include .coveragerc
-include pytest.ini
 
 include tox.ini rtd.txt
 
