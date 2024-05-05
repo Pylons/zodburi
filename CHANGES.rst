@@ -3,22 +3,36 @@
 Change Log
 ----------
 
-2.7.0 (unreleased)
+3.0.0 (unreleased)
 ~~~~~~~~~~~~~~~~~~
+
+- Rename private :func:`zodburi._resolve_uri` helper to 
+  :func:`_get_uri_factory_and_dbkw` for clarity.  Preserve original name
+  as a backward-compatibility alias (even though private, downstreams may
+  have found it needful to use the function).
+
+- Update unit tests using :mod:`pytest` idioms, dropping th
+  :class:`unittest.TestCase` classes.
+
+- Remove Python2 compatibility shims.
+
+- Replace use of deprecated :mod:`pkg_resources` APIs with new
+  :mod:`importlib.metadata` versions.
 
 - Add support for Python 3.9 - 3.12.
 
 - Drop support for Python 3.7.
 
-- Deprecate ``?demostorage`` in favour of ``demo:`` URI scheme.
+- Deprecate ``?demostorage`` query string parameter in favour of
+  ``demo:`` URI scheme.
 
 
 2.6.0 (2023-05-17)
 ~~~~~~~~~~~~~~~~~~
 
-- Drop support for ZODB4
+- Drop support for ZODB4.
 
-- Drop support for python<3.7
+- Drop support for python < 3.7.
 
 
 2.5.0 (2021-05-12)
