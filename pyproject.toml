@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zodburi"
+version = "3.0dev0"
+dynamic = ["readme"]
+description="Construct ZODB storage instances from URIs."
+keywords = [
+    "zodb",
+    "zodbconn",
+]
+authors = [
+    {name = "Chris Rossi", email = "pylons-discuss@googlegroups.com"},
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "License :: Repoze Public License",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "ZODB",
+    "ZConfig",
+    "ZEO"
+]
+
+[project.entry-points.'zodburi.resolvers']
+zeo = "zodburi.resolvers:client_storage_resolver"
+file = "zodburi.resolvers:file_storage_resolver"
+zconfig = "zodburi.resolvers:zconfig_resolver"
+memory = "zodburi.resolvers:mapping_storage_resolver"
+demo = "zodburi.resolvers:demo_storage_resolver"
+
+[project.urls]
+Homepage = "https://docs.pylonsproject.org/projects/zodburi/en/latest/"
+Repository = "https://github.com/Pylons/zodburi"
+Issues = "https://github.com/Pylons/zodburi/issues"
+Changelog = "https://github.com/Pylons/zodburi/blob/master/CHANGES.rst"
+
+[project.optional-dependencies]
+testing = [
+    "pytest",
+    "pytest-cov",
+    "check-manifest",
+]
+docs = [
+    "Sphinx",
+    "pylons-sphinx-themes",
+]
+
+[tool.setuptools]
+packages = ["zodburi"]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.rst", "CHANGES.rst"]}
+
+[tool.pytest.ini_options]
+addopts = [
+    "-l",
+    "--strict",
+]
+norecursedirs = [
+    "lib",
+    "include",
+    ".tox",
+    ".git",
+]
+python_files = "test_*.py"
+filterwarnings = [
+     "ignore::DeprecationWarning:pkg_resources",
+]
+
+[tool.coverage.report]
+show_missing = true

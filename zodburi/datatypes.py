@@ -1,43 +1,67 @@
 TRUETYPES = ('1', 'on', 'true', 't', 'yes')
 FALSETYPES = ('', '0', 'off', 'false', 'f', 'no')
 
+
+class SuffixLengthMismatch(ValueError):
+    def __init__(self, d):
+        self.d = d
+        super().__init__("All suffix keys must have the same length")
+
+
 class SuffixMultiplier:
-    # d is a dictionary of suffixes to integer multipliers.  If no suffixes
-    # match, default is the multiplier.  Matches are case insensitive.  Return
-    # values are in the fundamental unit.
+    """Convert integer-like strings w/ size suffixes to integers
+
+    - 'd' is a dictionary of suffixes to integer multipliers.
+    - 'default' is the multiplier if no suffixes match.
+
+    Matches are case insensitive.
+
+    Returned values are in the fundamental unit.
+    """
     def __init__(self, d, default=1):
-        self._d = d
-        self._default = default
         # all keys must be the same size
-        self._keysz = None
-        for k in d.keys():
-            if self._keysz is None:
-                self._keysz = len(k)
-            else:
-                if self._keysz != len(k):
-                    raise ValueError('suffix length missmatch')
+        sizes = set(len(key) for key in d)
+
+        if len(sizes) > 1:
+            raise SuffixLengthMismatch(d)
+
+        self._d = {key.lower(): value for key, value in d.items()}
+        self._default = default
+        self._keysz = sizes.pop() if sizes else 0
 
     def __call__(self, v):
-        v = v.lower()
-        for s, m in self._d.items():
-            if v[-self._keysz:] == s:
-                return int(v[:-self._keysz]) * m
-        return int(v) * self._default
+        if self._keysz and len(v) > self._keysz:
+            v = v.lower()
+            suffix = v[-self._keysz:]
+            multiplier = self._d.get(suffix, self._default)
 
-convert_bytesize = SuffixMultiplier({'kb': 1024,
-                                     'mb': 1024*1024,
-                                     'gb': 1024*1024*1024,
-                                    })
+            if multiplier is not self._default:
+                v = v[:-self._keysz]
+        else:
+            multiplier = self._default
+
+        return int(v) * multiplier
+
+
+convert_bytesize = SuffixMultiplier({
+    "kb": 1024,
+    "mb": 1024*1024,
+    "gb": 1024*1024*1024,
+})
 
 
 def convert_int(value):
     # boolean values are also treated as integers
     value = value.lower()
+
     if value in FALSETYPES:
         return 0
+
     if value in TRUETYPES:
         return 1
+
     return int(value)
 
+
 def convert_tuple(value):
-    return tuple(value.split(','))
+    return tuple(value.split(","))

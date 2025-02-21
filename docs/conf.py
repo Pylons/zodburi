@@ -17,7 +17,7 @@
 #sys.path.append(os.path.abspath('some/directory'))
 
 import datetime
-import pkg_resources
+import importlib.metadata
 import pylons_sphinx_themes
 
 # General configuration
@@ -48,7 +48,7 @@ project = 'zodburi'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = pkg_resources.get_distribution('zodburi').version
+version = importlib.metadata.version('zodburi')
 # The full version, including alpha/beta/rc tags.
 release = version
 
