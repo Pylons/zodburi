@@ -317,6 +317,7 @@ def test_fsresolver_invoke_factory_w_blobstorage_and_demostorage(tmpdir):
 @pytest.mark.parametrize("uri, expected_args, expected_kwargs", [
     ("zeo://localhost", (("localhost", 9991),), {}),
     ("zeo://localhost:8080?debug=true", (("localhost", 8080),), {"debug": 1}),
+    ("zeo://:1234?debug=true", (("", 1234),), {"debug": 1}),
     ("zeo://[::1]", (("::1", 9991),), {}),
     ("zeo://[::1]:9990?debug=true", (("::1", 9990),), {"debug": 1}),
     ("zeo:///var/sock?debug=true", ("/var/sock",), {"debug": 1}),
