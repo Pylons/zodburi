@@ -6,6 +6,10 @@ Change Log
 3.0.0 (unreleased)
 ~~~~~~~~~~~~~~~~~~
 
+- Drop support for Python 3.7 and 3.8.
+
+- Add support for Python 3.9 - 3.13.
+
 - Rename private :func:`zodburi._resolve_uri` helper to 
   :func:`_get_uri_factory_and_dbkw` for clarity.  Preserve original name
   as a backward-compatibility alias (even though private, downstreams may
@@ -18,10 +22,6 @@ Change Log
 
 - Replace use of deprecated :mod:`pkg_resources` APIs with new
   :mod:`importlib.metadata` versions.
-
-- Add support for Python 3.9 - 3.12.
-
-- Drop support for Python 3.7.
 
 - Deprecate ``?demostorage`` query string parameter in favour of
   ``demo:`` URI scheme.

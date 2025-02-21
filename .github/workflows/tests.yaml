@@ -10,12 +10,12 @@ jobs:
     strategy:
       matrix:
         python:
+          - '3.13'
           - '3.12'
           - '3.11'
           - '3.10'
           - '3.9'
-          - '3.8'
-          - 'pypy-3.8'
+          - 'pypy-3.10'
 
     steps:
       - uses: actions/checkout@v2
