@@ -10,18 +10,18 @@ Change Log
 
 - Add support for Python 3.9 - 3.13.
 
-- Rename private :func:`zodburi._resolve_uri` helper to 
-  :func:`_get_uri_factory_and_dbkw` for clarity.  Preserve original name
+- Rename private `zodburi._resolve_uri` helper to 
+  `_get_uri_factory_and_dbkw` for clarity.  Preserve original name
   as a backward-compatibility alias (even though private, downstreams may
   have found it needful to use the function).
 
-- Update unit tests using :mod:`pytest` idioms, dropping th
-  :class:`unittest.TestCase` classes.
+- Update unit tests using `pytest` idioms, dropping the
+  `unittest.TestCase` classes.
 
 - Remove Python2 compatibility shims.
 
-- Replace use of deprecated :mod:`pkg_resources` APIs with new
-  :mod:`importlib.metadata` versions.
+- Replace use of deprecated `pkg_resources` APIs with new
+  `importlib.metadata` versions.
 
 - Deprecate ``?demostorage`` query string parameter in favour of
   ``demo:`` URI scheme.
