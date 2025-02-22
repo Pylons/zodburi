@@ -3,7 +3,7 @@
 Change Log
 ----------
 
-3.0.0 (unreleased)
+3.0.0 (2025-02-22)
 ~~~~~~~~~~~~~~~~~~
 
 - Drop support for Python 3.7 and 3.8.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zodburi"
-version = "3.0dev0"
+version = "3.0.0"
 dynamic = ["readme"]
 description="Construct ZODB storage instances from URIs."
 keywords = [
