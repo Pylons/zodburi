@@ -144,6 +144,8 @@ class ClientStorageURIResolver(Resolver):
             port = u.port
             if port is None:
                 port = 9991
+            if host is None:  # zeo://:123 used to parse into ('', 123) on py2
+                host = ''
             args = ((host, port),)
         else:
             # Unix domain socket URL
